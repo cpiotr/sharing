@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magiczne Fiszki - Wszystkie Czasowniki Nieregularne</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-amber-300 via-pink-400 to-purple-500 min-h-screen flex flex-col items-center justify-between p-4 font-sans select-none">
+
+    <!-- Nagłówek -->
+    <header class="w-full max-w-md text-center py-2">
+        <h1 class="text-3xl font-extrabold text-white drop-shadow-md flex items-center justify-center gap-2">
+            <span>✨</span> Magiczne Fiszki <span>✨</span>
+        </h1>
+        <p class="text-white text-sm font-medium drop-shadow">Wszystkie 81 czasowników nieregularnych!</p>
+    </header>
+
+    <!-- Główny kontener -->
+    <main class="w-full max-w-md flex flex-col items-center my-auto">
+        
+        <!-- Przełącznik języka / kierunku -->
+        <div class="flex bg-white/30 backdrop-blur-md p-1.5 rounded-2xl w-full mb-3 shadow-inner">
+            <button id="btn-en-pl" onclick="setMode('EN_PL')" class="flex-1 py-2 text-xs font-bold rounded-xl transition bg-white text-purple-700 shadow-md">
+                🇬🇧 Angielski ➔ 🇵🇱 Polski
+            </button>
+            <button id="btn-pl-en" onclick="setMode('PL_EN')" class="flex-1 py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20">
+                🇵🇱 Polski ➔ 🇬🇧 Angielski
+            </button>
+        </div>
+
+        <!-- Licznik i gwiazdki -->
+        <div class="flex justify-between w-full mb-3 px-1 text-white font-bold text-sm drop-shadow">
+            <span id="card-counter" class="bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full">Karta 1 / 81</span>
+            <span id="score-counter" class="bg-amber-400/80 backdrop-blur-sm px-3 py-1 rounded-full text-amber-900 shadow">🌟 Gwiazdki: 0</span>
+        </div>
+
+        <!-- Fiszka 3D -->
+        <div class="w-full h-80 perspective-1000 cursor-pointer" id="flashcard-container" onclick="flipCard()">
+            <div id="flashcard" class="relative w-full h-full duration-500 transform-style-3d shadow-2xl rounded-3xl">
+                
+                <!-- Przód Fiszki -->
+                <div class="absolute inset-0 w-full h-full bg-white rounded-3xl p-6 flex flex-col items-center justify-center border-4 border-purple-300 backface-hidden">
+                    <div id="card-emoji" class="text-5xl mb-2 animate-bounce">🚀</div>
+                    <span id="front-label" class="text-xs uppercase tracking-widest text-purple-400 font-bold mb-1">Bezokolicznik (Infinitive)</span>
+                    <h2 id="front-main" class="text-3xl font-black text-purple-700 mb-2 text-center">be</h2>
+                    <span class="text-xs text-slate-400 mt-2 bg-purple-50 px-4 py-2 rounded-full border border-purple-100">👆 Kliknij, aby sprawdzić!</span>
+                </div>
+
+                <!-- Tył Fiszki -->
+                <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-indigo-600 to-purple-700 text-white rounded-3xl p-6 flex flex-col items-center justify-center rotate-y-180 backface-hidden border-4 border-indigo-300">
+                    <span id="back-label" class="text-xs uppercase tracking-widest text-amber-300 font-bold mb-1">Odpowiedź</span>
+                    <div id="back-content" class="text-center space-y-1 my-1">
+                        <!-- Generowane dynamicznie przez JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Przyciski sterowania -->
+        <div class="flex gap-3 w-full mt-5">
+            <button onclick="prevCard()" class="flex-1 bg-white/80 hover:bg-white text-purple-700 font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
+                ⬅️ Wstecz
+            </button>
+            <button onclick="nextCard(true)" class="flex-1 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
+                Umiem! ⭐
+            </button>
+            <button onclick="nextCard(false)" class="flex-1 bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
+                Dalej ➡️
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Stopka -->
+    <footer class="w-full max-w-md text-center py-2">
+        <button onclick="resetProgress()" class="text-white/80 hover:text-white text-xs underline font-medium">Zacznij naukę od nowa 🔄</button>
+    </footer>
+
+    <!-- Skrypt aplikacji zawierający wszystkie 81 słówek -->
+    <script>
+        const verbs = [
+            { infinitive: "be", past: "was / were", participle: "been", pl: "być", emoji: "🌟" },
+            { infinitive: "become", past: "became", participle: "become", pl: "stawać się", emoji: "🌱" },
+            { infinitive: "begin", past: "began", participle: "begun", pl: "zaczynać (się)", emoji: "🏁" },
+            { infinitive: "break", past: "broke", participle: "broken", pl: "łamać, psuć, potłuc", emoji: "🔨" },
+            { infinitive: "bring", past: "brought", participle: "brought", pl: "przynosić", emoji: "🎁" },
+            { infinitive: "build", past: "built", participle: "built", pl: "budować", emoji: "🧱" },
+            { infinitive: "burn", past: "burned / burnt", participle: "burned / burnt", pl: "palić, oparzyć (się)", emoji: "🔥" },
+            { infinitive: "buy", past: "bought", participle: "bought", pl: "kupować", emoji: "🛍️" },
+            { infinitive: "can", past: "could", participle: "been able to", pl: "móc, potrafić", emoji: "💪" },
+            { infinitive: "catch", past: "caught", participle: "caught", pl: "łapać", emoji: "🥎" },
+            { infinitive: "choose", past: "chose", participle: "chosen", pl: "wybierać", emoji: "🔀" },
+            { infinitive: "come", past: "came", participle: "come", pl: "przychodzić", emoji: "🚪" },
+            { infinitive: "cost", past: "cost", participle: "cost", pl: "kosztować", emoji: "💰" },
+            { infinitive: "cut", past: "cut", participle: "cut", pl: "ciąć", emoji: "✂️" },
+            { infinitive: "do", past: "did", participle: "done", pl: "robić", emoji: "✅" },
+            { infinitive: "draw", past: "drew", participle: "drawn", pl: "rysować", emoji: "🎨" },
+            { infinitive: "dream", past: "dreamed / dreamt", participle: "dreamed / dreamt", pl: "śnić, marzyć", emoji: "💭" },
+            { infinitive: "drink", past: "drank", participle: "drunk", pl: "pić", emoji: "🧃" },
+            { infinitive: "drive", past: "drove", participle: "driven", pl: "prowadzić samochód", emoji: "🚗" },
+            { infinitive: "eat", past: "ate", participle: "eaten", pl: "jeść", emoji: "🍎" },
+            { infinitive: "fall", past: "fell", participle: "fallen", pl: "upadać", emoji: "📉" },
+            { infinitive: "feed", past: "fed", participle: "fed", pl: "karmić", emoji: "🍼" },
+            { infinitive: "feel", past: "felt", participle: "felt", pl: "czuć (się)", emoji: "💖" },
+            { infinitive: "fight", past: "fought", participle: "fought", pl: "walczyć", emoji: "🛡️" },
+            { infinitive: "find", past: "found", participle: "found", pl: "znajdować", emoji: "🔍" },
+            { infinitive: "fly", past: "flew", participle: "flown", pl: "latać", emoji: "✈️" },
+            { infinitive: "forget", past: "forgot", participle: "forgotten", pl: "zapominać", emoji: "🧠" },
+            { infinitive: "forgive", past: "forgave", participle: "forgiven", pl: "wybaczyć", emoji: "🤝" },
+            { infinitive: "get", past: "got", participle: "got", pl: "dostawać", emoji: "📦" },
+            { infinitive: "give", past: "gave", participle: "given", pl: "dawać", emoji: "🎁" },
+            { infinitive: "go", past: "went", participle: "gone", pl: "iść / jechać", emoji: "🚀" },
+            { infinitive: "grow", past: "grew", participle: "grown", pl: "rosnąć, sadzić", emoji: "🌻" },
+            { infinitive: "hang", past: "hung", participle: "hung", pl: "wisieć", emoji: "🖼️" },
+            { infinitive: "have", past: "had", participle: "had", pl: "mieć", emoji: "🎒" },
+            { infinitive: "hear", past: "heard", participle: "heard", pl: "słyszeć", emoji: "👂" },
+            { infinitive: "hide", past: "hid", participle: "hidden", pl: "ukryć, schować (się)", emoji: "🫣" },
+            { infinitive: "hit", past: "hit", participle: "hit", pl: "uderzać", emoji: "🎾" },
+            { infinitive: "hold", past: "held", participle: "held", pl: "trzymać", emoji: "🤲" },
+            { infinitive: "hurt", past: "hurt", participle: "hurt", pl: "ranić", emoji: "🩹" },
+            { infinitive: "keep", past: "kept", participle: "kept", pl: "(za)trzymać", emoji: "🔒" },
+            { infinitive: "know", past: "knew", participle: "known", pl: "wiedzieć, znać", emoji: "💡" },
+            { infinitive: "learn", past: "learned / learnt", participle: "learned / learnt", pl: "uczyć się", emoji: "📚" },
+            { infinitive: "leave", past: "left", participle: "left", pl: "opuszczać", emoji: "🚪" },
+            { infinitive: "lend", past: "lent", participle: "lent", pl: "pożyczyć (komuś)", emoji: "🤝" },
+            { infinitive: "let", past: "let", participle: "let", pl: "pozwolić", emoji: "🟢" },
+            { infinitive: "lie", past: "lay", participle: "lain", pl: "kłaść (się)", emoji: "🛏️" },
+            { infinitive: "lose", past: "lost", participle: "lost", pl: "gubić, stracić", emoji: "❓" },
+            { infinitive: "make", past: "made", participle: "made", pl: "robić", emoji: "🛠️" },
+            { infinitive: "meet", past: "met", participle: "met", pl: "spotykać", emoji: "👋" },
+            { infinitive: "pay", past: "paid", participle: "paid", pl: "płacić", emoji: "💳" },
+            { infinitive: "put", past: "put", participle: "put", pl: "kłaść", emoji: "📦" },
+            { infinitive: "read", past: "read", participle: "read", pl: "czytać", emoji: "📖" },
+            { infinitive: "ride", past: "rode", participle: "ridden", pl: "jeździć (na)", emoji: "🚲" },
+            { infinitive: "ring", past: "rang", participle: "rung", pl: "dzwonić", emoji: "🔔" },
+            { infinitive: "run", past: "ran", participle: "run", pl: "biegać", emoji: "🏃‍♂️" },
+            { infinitive: "say", past: "said", participle: "said", pl: "mówić", emoji: "🗣️" },
+            { infinitive: "see", past: "saw", participle: "seen", pl: "widzieć", emoji: "👀" },
+            { infinitive: "sell", past: "sold", participle: "sold", pl: "sprzedawać", emoji: "🏷️" },
+            { infinitive: "send", past: "sent", participle: "sent", pl: "wysyłać", emoji: "✉️" },
+            { infinitive: "set", past: "set", participle: "set", pl: "ustawić", emoji: "⚙️" },
+            { infinitive: "shine", past: "shone", participle: "shone", pl: "świecić się, błyszczeć", emoji: "✨" },
+            { infinitive: "show", past: "showed", participle: "shown", pl: "pokazać", emoji: "📺" },
+            { infinitive: "sing", past: "sang", participle: "sung", pl: "śpiewać", emoji: "🎤" },
+            { infinitive: "sit", past: "sat", participle: "sat", pl: "siedzieć", emoji: "🪑" },
+            { infinitive: "sleep", past: "slept", participle: "slept", pl: "spać", emoji: "😴" },
+            { infinitive: "speak", past: "spoke", participle: "spoken", pl: "mówić", emoji: "💬" },
+            { infinitive: "spell", past: "spelt / spelled", participle: "spelt / spelled", pl: "literować", emoji: "🔤" },
+            { infinitive: "spend", past: "spent", participle: "spent", pl: "spędzać, wydawać", emoji: "⏳" },
+            { infinitive: "stand", past: "stood", participle: "stood", pl: "stać", emoji: "🧍‍♂️" },
+            { infinitive: "steal", past: "stole", participle: "stolen", pl: "kraść", emoji: "🦹‍♂️" },
+            { infinitive: "sweep", past: "swept", participle: "swept", pl: "zamiatać", emoji: "🧹" },
+            { infinitive: "swim", past: "swam", participle: "swum", pl: "pływać", emoji: "🏊‍♂️" },
+            { infinitive: "take", past: "took", participle: "taken", pl: "brać", emoji: "✋" },
+            { infinitive: "teach", past: "taught", participle: "taught", pl: "uczyć (kogoś)", emoji: "👩‍🏫" },
+            { infinitive: "tell", past: "told", participle: "told", pl: "powiedzieć, opowiadać", emoji: "🗣️" },
+            { infinitive: "think", past: "thought", participle: "thought", pl: "myśleć", emoji: "💭" },
+            { infinitive: "understand", past: "understood", participle: "understood", pl: "rozumieć", emoji: "💡" },
+            { infinitive: "wake", past: "woke", participle: "woken", pl: "budzić (się)", emoji: "⏰" },
+            { infinitive: "wear", past: "wore", participle: "worn", pl: "nosić, mieć na sobie", emoji: "👕" },
+            { infinitive: "win", past: "won", participle: "won", pl: "wygrywać", emoji: "🏆" },
+            { infinitive: "write", past: "wrote", participle: "written", pl: "pisać", emoji: "✍️" }
+        ];
+
+        let currentIndex = 0;
+        let isFlipped = false;
+        let score = 0;
+        let currentMode = "EN_PL"; // "EN_PL" lub "PL_EN"
+
+        const flashcard = document.getElementById("flashcard");
+        const frontLabel = document.getElementById("front-label");
+        const frontMain = document.getElementById("front-main");
+        const cardEmoji = document.getElementById("card-emoji");
+        const backLabel = document.getElementById("back-label");
+        const backContent = document.getElementById("back-content");
+        const cardCounter = document.getElementById("card-counter");
+        const scoreCounter = document.getElementById("score-counter");
+
+        function setMode(mode) {
+            currentMode = mode;
+            const btnEnPl = document.getElementById("btn-en-pl");
+            const btnPlEn = document.getElementById("btn-pl-en");
+
+            if (mode === "EN_PL") {
+                btnEnPl.className = "flex-1 py-2 text-xs font-bold rounded-xl transition bg-white text-purple-700 shadow-md";
+                btnPlEn.className = "flex-1 py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20";
+            } else {
+                btnPlEn.className = "flex-1 py-2 text-xs font-bold rounded-xl transition bg-white text-purple-700 shadow-md";
+                btnEnPl.className = "flex-1 py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20";
+            }
+            updateCard();
+        }
+
+        function updateCard() {
+            if (isFlipped) {
+                flashcard.classList.remove("rotate-y-180");
+                isFlipped = false;
+            }
+
+            const current = verbs[currentIndex];
+            setTimeout(() => {
+                cardEmoji.textContent = current.emoji;
+                
+                if (currentMode === "EN_PL") {
+                    frontLabel.textContent = "Bezokolicznik (Infinitive)";
+                    frontMain.textContent = current.infinitive;
+                    backLabel.textContent = "Polskie tłumaczenie i formy";
+                    backContent.innerHTML = `
+                        <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-center mb-2">
+                            <span class="text-xs text-amber-200 block font-semibold">Tłumaczenie:</span>
+                            <span class="text-xl font-bold text-white">${current.pl}</span>
+                        </div>
+                        <p class="text-sm"><span class="text-amber-200">Past Simple:</span> <span class="font-bold">${current.past}</span></p>
+                        <p class="text-sm"><span class="text-amber-200">Past Participle:</span> <span class="font-bold">${current.participle}</span></p>
+                    `;
+                } else {
+                    frontLabel.textContent = "Polskie znaczenie";
+                    frontMain.textContent = current.pl;
+                    backLabel.textContent = "Angielskie formy czasownika";
+                    backContent.innerHTML = `
+                        <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-center mb-2">
+                            <span class="text-xs text-amber-200 block font-semibold">Bezokolicznik:</span>
+                            <span class="text-2xl font-black text-amber-300">${current.infinitive}</span>
+                        </div>
+                        <p class="text-sm"><span class="text-amber-200">Past Simple:</span> <span class="font-bold">${current.past}</span></p>
+                        <p class="text-sm"><span class="text-amber-200">Past Participle:</span> <span class="font-bold">${current.participle}</span></p>
+                    `;
+                }
+                cardCounter.textContent = `Karta ${currentIndex + 1} / ${verbs.length}`;
+            }, 150);
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            if (isFlipped) {
+                flashcard.classList.add("rotate-y-180");
+            } else {
+                flashcard.classList.remove("rotate-y-180");
+            }
+        }
+
+        function nextCard(earnedPoint = false) {
+            if (earnedPoint) {
+                score += 1;
+                scoreCounter.textContent = `🌟 Gwiazdki: ${score}`;
+            }
+            currentIndex = (currentIndex + 1) % verbs.length;
+            updateCard();
+        }
+
+        function prevCard() {
+            currentIndex = (currentIndex - 1 + verbs.length) % verbs.length;
+            updateCard();
+        }
+
+        function resetProgress() {
+            currentIndex = 0;
+            score = 0;
+            scoreCounter.textContent = `🌟 Gwiazdki: ${score}`;
+            updateCard();
+        }
+
+        // Inicjalizacja pierwszej karty
+        updateCard();
+    </script>
+</body>
+</html>
+
