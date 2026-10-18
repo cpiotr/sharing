@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magiczne fiszki – pierwiastki chemiczne</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .perspective-1000 { perspective: 1000px; }
+    .transform-style-3d { transform-style: preserve-3d; }
+    .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+    .rotate-y-180 { transform: rotateY(180deg); }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-cyan-400 via-blue-500 to-violet-600 min-h-screen flex flex-col items-center justify-between p-4 font-sans select-none">
+  <header class="w-full max-w-md text-center py-2">
+    <h1 class="text-3xl font-extrabold text-white drop-shadow-md">⚗️ Fiszki chemiczne ⚗️</h1>
+    <p class="text-white text-sm font-medium drop-shadow">Pierwiastki chemiczne: nazwy i symbole</p>
+  </header>
+
+  <main class="w-full max-w-md flex flex-col items-center my-auto">
+    <div class="flex bg-white/30 backdrop-blur-md p-1.5 rounded-2xl w-full mb-3 shadow-inner">
+      <button id="btn-pl-symbol" onclick="setMode('PL_SYMBOL')" class="flex-1 py-2 px-1 text-xs font-bold rounded-xl transition bg-white text-blue-700 shadow-md">
+        🇵🇱 Nazwa ➔ Symbol
+      </button>
+      <button id="btn-symbol-pl" onclick="setMode('SYMBOL_PL')" class="flex-1 py-2 px-1 text-xs font-bold rounded-xl transition text-white hover:bg-white/20">
+        Symbol ➔ 🇵🇱 Nazwa
+      </button>
+    </div>
+
+    <div class="flex justify-between w-full mb-3 px-1 text-white font-bold text-sm drop-shadow">
+      <span id="card-counter" class="bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full">Karta 1 / 28</span>
+      <span id="score-counter" class="bg-amber-300/90 px-3 py-1 rounded-full text-amber-900 shadow">⭐ Gwiazdki: 0</span>
+    </div>
+
+    <div class="w-full h-80 perspective-1000 cursor-pointer" id="flashcard-container" onclick="flipCard()" role="button" tabindex="0" aria-label="Odwróć fiszkę">
+      <div id="flashcard" class="relative w-full h-full duration-500 transform-style-3d shadow-2xl rounded-3xl transition-transform">
+        <div class="absolute inset-0 w-full h-full bg-white rounded-3xl p-6 flex flex-col items-center justify-center border-4 border-cyan-200 backface-hidden">
+          <div id="card-emoji" class="text-5xl mb-3">🧪</div>
+          <span id="front-label" class="text-xs uppercase tracking-widest text-blue-400 font-bold mb-2">Nazwa pierwiastka</span>
+          <h2 id="front-main" class="text-4xl font-black text-blue-700 mb-2 text-center">Wodór</h2>
+          <span class="text-xs text-slate-400 mt-3 bg-blue-50 px-4 py-2 rounded-full border border-blue-100">👆 Kliknij, aby sprawdzić!</span>
+        </div>
+        <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-indigo-700 to-blue-800 text-white rounded-3xl p-6 flex flex-col items-center justify-center rotate-y-180 backface-hidden border-4 border-indigo-300">
+          <span id="back-label" class="text-xs uppercase tracking-widest text-amber-300 font-bold mb-3">Symbol chemiczny</span>
+          <div id="back-content" class="text-center">
+            <div class="text-6xl font-black text-white">H</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-2 w-full mt-5">
+      <button onclick="prevCard()" class="flex-1 bg-white/85 hover:bg-white text-blue-700 font-bold py-3 px-2 rounded-2xl shadow-lg transition active:scale-95 text-sm">⬅️ Wstecz</button>
+      <button onclick="nextCard(true)" class="flex-1 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3 px-2 rounded-2xl shadow-lg transition active:scale-95 text-sm">Umiem! ⭐</button>
+      <button onclick="nextCard(false)" class="flex-1 bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 text-white font-bold py-3 px-2 rounded-2xl shadow-lg transition active:scale-95 text-sm">Dalej ➡️</button>
+    </div>
+  </main>
+
+  <footer class="w-full max-w-md text-center py-3">
+    <button onclick="resetProgress()" class="text-white/90 hover:text-white text-xs underline font-medium">Zacznij naukę od nowa 🔄</button>
+  </footer>
+
+  <script>
+    // Jedno źródło danych: każda fiszka korzysta z tego samego szablonu i logiki.
+    const elements = [
+      { name: "Wodór", symbol: "H", emoji: "💧" },
+      { name: "Sód", symbol: "Na", emoji: "🧂" },
+      { name: "Potas", symbol: "K", emoji: "🍌" },
+      { name: "Magnez", symbol: "Mg", emoji: "✨" },
+      { name: "Wapń", symbol: "Ca", emoji: "🦴" },
+      { name: "Glin", symbol: "Al", emoji: "🥫" },
+      { name: "Węgiel", symbol: "C", emoji: "🪨" },
+      { name: "Azot", symbol: "N", emoji: "🌬️" },
+      { name: "Tlen", symbol: "O", emoji: "🫁" },
+      { name: "Chlor", symbol: "Cl", emoji: "🧪" },
+      { name: "Hel", symbol: "He", emoji: "🎈" },
+      { name: "Neon", symbol: "Ne", emoji: "💡" },
+      { name: "Argon", symbol: "Ar", emoji: "💡" },
+      { name: "Srebro", symbol: "Ag", emoji: "🥈" },
+      { name: "Złoto", symbol: "Au", emoji: "🥇" },
+      { name: "Miedź", symbol: "Cu", emoji: "🪙" },
+      { name: "Platyna", symbol: "Pt", emoji: "💍" },
+      { name: "Brom", symbol: "Br", emoji: "🧪" },
+      { name: "Jod", symbol: "I", emoji: "🧴" },
+      { name: "Siarka", symbol: "S", emoji: "🌋" },
+      { name: "Fosfor", symbol: "P", emoji: "🔥" },
+      { name: "Rtęć", symbol: "Hg", emoji: "🌡️" },
+      { name: "Żelazo", symbol: "Fe", emoji: "🔩" },
+      { name: "Ołów", symbol: "Pb", emoji: "⚙️" },
+      { name: "Krzem", symbol: "Si", emoji: "💻" },
+      { name: "Polon", symbol: "Po", emoji: "☢️" },
+      { name: "Cynk", symbol: "Zn", emoji: "🔋" },
+      { name: "Cyna", symbol: "Sn", emoji: "🥫" }
+    ];
+
+    let currentIndex = 0;
+    let isFlipped = false;
+    let score = 0;
+    let currentMode = "PL_SYMBOL";
+
+    const flashcard = document.getElementById("flashcard");
+    const frontLabel = document.getElementById("front-label");
+    const frontMain = document.getElementById("front-main");
+    const cardEmoji = document.getElementById("card-emoji");
+    const backLabel = document.getElementById("back-label");
+    const backContent = document.getElementById("back-content");
+    const cardCounter = document.getElementById("card-counter");
+    const scoreCounter = document.getElementById("score-counter");
+
+    function setMode(mode) {
+      currentMode = mode;
+      const plButton = document.getElementById("btn-pl-symbol");
+      const symbolButton = document.getElementById("btn-symbol-pl");
+      const active = "flex-1 py-2 px-1 text-xs font-bold rounded-xl transition bg-white text-blue-700 shadow-md";
+      const inactive = "flex-1 py-2 px-1 text-xs font-bold rounded-xl transition text-white hover:bg-white/20";
+      plButton.className = mode === "PL_SYMBOL" ? active : inactive;
+      symbolButton.className = mode === "SYMBOL_PL" ? active : inactive;
+      updateCard();
+    }
+
+    function updateCard() {
+      flashcard.classList.remove("rotate-y-180");
+      isFlipped = false;
+      const current = elements[currentIndex];
+
+      cardEmoji.textContent = current.emoji;
+      if (currentMode === "PL_SYMBOL") {
+        frontLabel.textContent = "Nazwa pierwiastka";
+        frontMain.textContent = current.name;
+        backLabel.textContent = "Symbol chemiczny";
+        backContent.innerHTML = `<div class="text-6xl font-black text-white">${current.symbol}</div>`;
+      } else {
+        frontLabel.textContent = "Symbol chemiczny";
+        frontMain.textContent = current.symbol;
+        backLabel.textContent = "Nazwa pierwiastka";
+        backContent.innerHTML = `<div class="text-3xl font-black text-white">${current.name}</div>`;
+      }
+
+      cardCounter.textContent = `Karta ${currentIndex + 1} / ${elements.length}`;
+    }
+
+    function flipCard() {
+      isFlipped = !isFlipped;
+      flashcard.classList.toggle("rotate-y-180", isFlipped);
+    }
+
+    function nextCard(earnedPoint = false) {
+      if (earnedPoint) {
+        score += 1;
+        scoreCounter.textContent = `⭐ Gwiazdki: ${score}`;
+      }
+      currentIndex = (currentIndex + 1) % elements.length;
+      updateCard();
+    }
+
+    function prevCard() {
+      currentIndex = (currentIndex - 1 + elements.length) % elements.length;
+      updateCard();
+    }
+
+    function resetProgress() {
+      currentIndex = 0;
+      score = 0;
+      scoreCounter.textContent = `⭐ Gwiazdki: ${score}`;
+      updateCard();
+    }
+
+    document.getElementById("flashcard-container").addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        flipCard();
+      }
+    });
+
+    updateCard();
+  </script>
+</body>
+</html>
