@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magiczne Fiszki - Niemiecki (Materiał ze zdjęć)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 min-h-screen flex flex-col items-center justify-between p-4 font-sans select-none">
+
+    <!-- Nagłówek -->
+    <header class="w-full max-w-md text-center py-2">
+        <h1 class="text-3xl font-extrabold text-white drop-shadow-md flex items-center justify-center gap-2">
+            <span>🇩🇪</span> Niemiecki: Fiszki <span>🇩🇪</span>
+        </h1>
+        <p class="text-white text-sm font-medium drop-shadow">Słownictwo i gramatyka z materiałów lekcyjnych!</p>
+    </header>
+
+    <!-- Główny kontener -->
+    <main class="w-full max-w-md flex flex-col items-center my-auto">
+        
+        <!-- Przełącznik języka / kierunku -->
+        <div class="flex bg-white/30 backdrop-blur-md p-1.5 rounded-2xl w-full mb-3 shadow-inner">
+            <button id="btn-de-pl" onclick="setMode('DE_PL')" class="flex-1 py-2 text-xs font-bold rounded-xl transition bg-white text-purple-700 shadow-md">
+                🇩🇪 Niemiecki ➔ 🇵🇱 Polski
+            </button>
+            <button id="btn-pl-de" onclick="setMode('PL_DE')" class="flex-1 py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20">
+                🇵🇱 Polski ➔ 🇩🇪 Niemiecki
+            </button>
+        </div>
+
+        <!-- Licznik i gwiazdki -->
+        <div class="flex justify-between w-full mb-3 px-1 text-white font-bold text-sm drop-shadow">
+            <span id="card-counter" class="bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full">Karta 1 / 35</span>
+            <span id="score-counter" class="bg-amber-400/80 backdrop-blur-sm px-3 py-1 rounded-full text-amber-900 shadow">🌟 Gwiazdki: 0</span>
+        </div>
+
+        <!-- Fiszka 3D -->
+        <div class="w-full h-80 perspective-1000 cursor-pointer" id="flashcard-container" onclick="flipCard()">
+            <div id="flashcard" class="relative w-full h-full duration-500 transform-style-3d shadow-2xl rounded-3xl">
+                
+                <!-- Przód Fiszki -->
+                <div class="absolute inset-0 w-full h-full bg-white rounded-3xl p-6 flex flex-col items-center justify-center border-4 border-indigo-300 backface-hidden">
+                    <div id="card-emoji" class="text-5xl mb-2 animate-bounce">🚀</div>
+                    <span id="front-label" class="text-xs uppercase tracking-widest text-indigo-400 font-bold mb-1">Pojęcie / Słowo</span>
+                    <h2 id="front-main" class="text-2xl font-black text-indigo-700 mb-2 text-center">Haus</h2>
+                    <span class="text-xs text-slate-400 mt-2 bg-indigo-50 px-4 py-2 rounded-full border border-indigo-100">👆 Kliknij, aby sprawdzić!</span>
+                </div>
+
+                <!-- Tył Fiszki -->
+                <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-700 to-indigo-800 text-white rounded-3xl p-6 flex flex-col items-center justify-center rotate-y-180 backface-hidden border-4 border-purple-300">
+                    <span id="back-label" class="text-xs uppercase tracking-widest text-amber-300 font-bold mb-1">Odpowiedź i reguła</span>
+                    <div id="back-content" class="text-center space-y-1 my-1">
+                        <!-- Generowane dynamicznie przez JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Przyciski sterowania -->
+        <div class="flex gap-3 w-full mt-5">
+            <button onclick="prevCard()" class="flex-1 bg-white/80 hover:bg-white text-indigo-700 font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
+                ⬅️ Wstecz
+            </button>
+            <button onclick="nextCard(true)" class="flex-1 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
+                Umiem! ⭐
+            </button>
+            <button onclick="nextCard(false)" class="flex-1 bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
+                Dalej ➡️
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Stopka -->
+    <footer class="w-full max-w-md text-center py-2">
+        <button onclick="resetProgress()" class="text-white/80 hover:text-white text-xs underline font-medium">Zacznij naukę od nowa 🔄</button>
+    </footer>
+
+    <!-- Skrypt zawierający materiał ze wszystkich zdjęć -->
+    <script>
+        const flashcards = [
+            // ZDJĘCIE 1, 3, 4: Czasowniki i zwroty
+            { term: "kommen", translation: "pochodzić", info: "Odmiana (Präsens): ich komme, du kommst, er/sie/es kommt, wir kommen, ihr kommt, sie/Sie kommen", emoji: "🏠" },
+            { term: "heißen", translation: "nazywać się", info: "Uwaga: po -s, -ß, -x, -z w 2 os. l.poj. (du) dodajemy -t zamiast -st (du heißt)", emoji: "📛" },
+            { term: "wohnen", translation: "mieszkać", info: "Czasownik regularny w czasie teraźniejszym (Präsens)", emoji: "📍" },
+            { term: "Wie heißt du?", translation: "Jak się nazywasz?", info: "Zwrot powitalny / pytań o imię", emoji: "❓" },
+            { term: "Ich heiße Klaus.", translation: "Nazywam się Klaus.", info: "Odpowiedź na pytanie o imię", emoji: "🗣️" },
+            { term: "Woher kommst du?", translation: "Skąd pochodzisz?", info: "Pytanie o miejsce pochodzenia", emoji: "🌍" },
+            { term: "Ich komme aus Polen.", translation: "Pochodzę z Polski.", info: "Odpowiedź z użyciem przyimka aus", emoji: "🇵🇱" },
+            { term: "Wo wohnst du?", translation: "Gdzie mieszkasz?", info: "Pytanie o miejsce zamieszkania", emoji: "🏙️" },
+            { term: "Ich wohne in Berlin.", translation: "Mieszkam w Berlinie.", info: "Odpowiedź z użyciem przyimka in", emoji: "🇩🇪" },
+
+            // ZDJĘCIE 7: Czasownik sein
+            { term: "sein (czasownik)", translation: "być", info: "Odmiana: ich bin, du bist, er/sie/es ist, wir sind, ihr seid, sie/Sie sind", emoji: "⚡" },
+
+            // ZDJĘCIE 2 i 5: Liczby
+            { term: "Zahlen 0–12", translation: "Liczby od 0 do 12", info: "0-null, 1-eins, 2-zwei, 3-drei, 4-vier, 5-fünf, 6-sechs, 7-sieben, 8-acht, 9-neun, 10-zehn, 11-elf, 12-zwölf", emoji: "🔢" },
+            { term: "Zahlen 13–19", translation: "Liczby od 13 do 19", info: "13-dreizehn, 14-vierzehn, 15-fünfzehn, 16-sechzehn, 17-siebzehn, 18-achtzehn, 19-neunzehn", emoji: "📊" },
+            { term: "Zehnerzahlen (20–100)", translation: "Dziesiątki (20-100)", info: "20-zwanzig, 30-dreißig, 40-vierzig, 50-fünfzig, 60-sechzig, 70-siebzig, 80-achtzig, 90-neunzig, 100-hundert", emoji: "💯" },
+            { term: "Zasada liczb > 20", translation: "Tworzenie liczb powyżej 20", info: "jedności + und + dziesiątki (np. 27 = siebenundzwanzig). Uwaga: 1 traci -s (np. 71 = einundsiebzig)", emoji: "🧮" },
+
+            // ZDJĘCIE 6: Rodzina i rodzajniki
+            { term: "der Vater", translation: "ojciec", info: "Rodzaj męski (Nominativ: der)", emoji: "👨" },
+            { term: "die Mutter", translation: "matka", info: "Rodzaj żeński (Nominativ: die)", emoji: "👩" },
+            { term: "der Großvater / der Opa", translation: "dziadek", info: "Rodzaj męski", emoji: "👴" },
+            { term: "die Großmutter / die Oma", translation: "babcia", info: "Rodzaj żeński", emoji: "👵" },
+            { term: "der Onkel", translation: "wujek", info: "Rodzaj męski", emoji: "🧔" },
+            { term: "die Tante", translation: "ciotka", info: "Rodzaj żeński", emoji: "👩‍🦰" },
+            { term: "der Bruder", translation: "brat", info: "Rodzaj męski", emoji: "👦" },
+            { term: "die Schwester", translation: "siostra", info: "Rodzaj żeński", emoji: "👧" },
+            { term: "der Sohn", translation: "syn", info: "Rodzaj męski", emoji: "👶" },
+            { term: "die Tochter", translation: "córka", info: "Rodzaj żeński", emoji: "👧" },
+            { term: "das Kind", translation: "dziecko", info: "Rodzaj nijaki (Nominativ: das)", emoji: "👶" },
+            { term: "die Eltern (Pl.)", translation: "rodzice", info: "Liczba mnoga", emoji: "👪" },
+            { term: "die Großeltern (Pl.)", translation: "dziadkowie", info: "Liczba mnoga", emoji: "👵👴" },
+            { term: "die Geschwister (Pl.)", translation: "rodzeństwo", info: "Liczba mnoga", emoji: "🧑‍🤝‍🧑" },
+
+            // ZDJĘCIE 8: Zaimki dzierżawcze
+            { term: "mein / meine", translation: "mój / moja", info: "Zaimki dzierżawcze w mianowniku (mein dla r. męskiego i nijakiego, meine dla r. żeńskiego i l. mnogiej)", emoji: "📌" },
+            { term: "dein / deine", translation: "twój / twoja", info: "Zaimki dzierżawcze w mianowniku (dein dla r. męskiego i nijakiego, deine dla r. żeńskiego i l. mnogiej)", emoji: "📌" }
+        ];
+
+        let currentIndex = 0;
+        let isFlipped = false;
+        let score = 0;
+        let currentMode = "DE_PL"; // "DE_PL" lub "PL_DE"
+
+        const flashcard = document.getElementById("flashcard");
+        const frontLabel = document.getElementById("front-label");
+        const frontMain = document.getElementById("front-main");
+        const cardEmoji = document.getElementById("card-emoji");
+        const backLabel = document.getElementById("back-label");
+        const backContent = document.getElementById("back-content");
+        const cardCounter = document.getElementById("card-counter");
+        const scoreCounter = document.getElementById("score-counter");
+
+        function setMode(mode) {
+            currentMode = mode;
+            const btnDePl = document.getElementById("btn-de-pl");
+            const btnPlDe = document.getElementById("btn-pl-de");
+
+            if (mode === "DE_PL") {
+                btnDePl.className = "flex-1 py-2 text-xs font-bold rounded-xl transition bg-white text-purple-700 shadow-md";
+                btnPlDe.className = "flex-1 py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20";
+            } else {
+                btnPlDe.className = "flex-1 py-2 text-xs font-bold rounded-xl transition bg-white text-purple-700 shadow-md";
+                btnDePl.className = "flex-1 py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20";
+            }
+            updateCard();
+        }
+
+        function updateCard() {
+            if (isFlipped) {
+                flashcard.classList.remove("rotate-y-180");
+                isFlipped = false;
+            }
+
+            const current = flashcards[currentIndex];
+            setTimeout(() => {
+                cardEmoji.textContent = current.emoji;
+                
+                if (currentMode === "DE_PL") {
+                    frontLabel.textContent = "Niemiecki / Wyrażenie";
+                    frontMain.textContent = current.term;
+                    backLabel.textContent = "Polskie tłumaczenie i reguła";
+                    backContent.innerHTML = `
+                        <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-center mb-2">
+                            <span class="text-xs text-amber-200 block font-semibold">Tłumaczenie:</span>
+                            <span class="text-xl font-bold text-white">${current.translation}</span>
+                        </div>
+                        <p class="text-xs text-indigo-200 mt-2 px-2 text-center leading-relaxed"><span class="font-semibold text-amber-300">Info:</span> ${current.info}</p>
+                    `;
+                } else {
+                    frontLabel.textContent = "Polskie znaczenie";
+                    frontMain.textContent = current.translation;
+                    backLabel.textContent = "Niemiecka forma i zasada";
+                    backContent.innerHTML = `
+                        <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-center mb-2">
+                            <span class="text-xs text-amber-200 block font-semibold">Niemiecki:</span>
+                            <span class="text-2xl font-black text-amber-300">${current.term}</span>
+                        </div>
+                        <p class="text-xs text-indigo-200 mt-2 px-2 text-center leading-relaxed"><span class="font-semibold text-amber-300">Info:</span> ${current.info}</p>
+                    `;
+                }
+                cardCounter.textContent = `Karta ${currentIndex + 1} / ${flashcards.length}`;
+            }, 150);
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            if (isFlipped) {
+                flashcard.classList.add("rotate-y-180");
+            } else {
+                flashcard.classList.remove("rotate-y-180");
+            }
+        }
+
+        function nextCard(earnedPoint = false) {
+            if (earnedPoint) {
+                score += 1;
+                scoreCounter.textContent = `🌟 Gwiazdki: ${score}`;
+            }
+            currentIndex = (currentIndex + 1) % flashcards.length;
+            updateCard();
+        }
+
+        function prevCard() {
+            currentIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
+            updateCard();
+        }
+
+        function resetProgress() {
+            currentIndex = 0;
+            score = 0;
+            scoreCounter.textContent = `🌟 Gwiazdki: ${score}`;
+            updateCard();
+        }
+
+        // Inicjalizacja pierwszej karty
+        updateCard();
+    </script>
+</body>
+</html>
+
