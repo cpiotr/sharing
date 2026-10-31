@@ -24,15 +24,11 @@
 
     <!-- Główny kontener -->
     <main class="w-full max-w-md flex flex-col items-center my-auto">
-        
+
         <!-- Przełącznik języka / kierunku -->
         <div class="flex bg-white/30 backdrop-blur-md p-1.5 rounded-2xl w-full mb-3 shadow-inner">
-            <button id="btn-de-pl" onclick="setMode('DE_PL')" class="flex-1 py-2 text-xs font-bold rounded-xl transition bg-white text-purple-700 shadow-md">
-                🇩🇪 Niemiecki ➔ 🇵🇱 Polski
-            </button>
-            <button id="btn-pl-de" onclick="setMode('PL_DE')" class="flex-1 py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20">
-                🇵🇱 Polski ➔ 🇩🇪 Niemiecki
-            </button>
+            <button data-action="mode" data-mode="DE_PL">🇩🇪 Niemiecki ➔ 🇵🇱 Polski</button>
+            <button data-action="mode" data-mode="PL_DE">🇵🇱 Polski ➔ 🇩🇪 Niemiecki</button>
         </div>
 
         <!-- Licznik i gwiazdki -->
@@ -42,9 +38,9 @@
         </div>
 
         <!-- Fiszka 3D -->
-        <div class="w-full h-80 perspective-1000 cursor-pointer" id="flashcard-container" onclick="flipCard()">
+        <div class="w-full h-80 perspective-1000 cursor-pointer" id="flashcard-container" data-action="flip">
             <div id="flashcard" class="relative w-full h-full duration-500 transform-style-3d shadow-2xl rounded-3xl">
-                
+
                 <!-- Przód Fiszki -->
                 <div class="absolute inset-0 w-full h-full bg-white rounded-3xl p-6 flex flex-col items-center justify-center border-4 border-indigo-300 backface-hidden">
                     <div id="card-emoji" class="text-5xl mb-2 animate-bounce">🚀</div>
@@ -65,17 +61,17 @@
         </div>
 
         <!-- Powrót z poziomu odmiany -->
-        <button id="level-button" onclick="returnToWord()" class="hidden w-full mt-3 bg-white/90 hover:bg-white text-indigo-700 font-bold py-2 px-3 rounded-xl shadow transition text-sm">↩ Wróć do fiszki ze słówkiem</button>
+        <button id="level-button" data-action="return-to-word" class="hidden w-full mt-3 bg-white/90 hover:bg-white text-indigo-700 font-bold py-2 px-3 rounded-xl shadow transition text-sm">↩ Wróć do fiszki ze słówkiem</button>
 
         <!-- Przyciski sterowania -->
         <div class="flex gap-3 w-full mt-5">
-            <button onclick="prevCard()" class="flex-1 bg-white/80 hover:bg-white text-indigo-700 font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
+            <button data-action="prev" class="flex-1 bg-white/80 hover:bg-white text-indigo-700 font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
                 ⬅️ Wstecz
             </button>
-            <button onclick="nextCard(true)" class="flex-1 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
+            <button data-action="next-known" class="flex-1 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
                 Umiem! ⭐
             </button>
-            <button onclick="nextCard(false)" class="flex-1 bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
+            <button data-action="next" class="flex-1 bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
                 Dalej ➡️
             </button>
         </div>
@@ -84,9 +80,10 @@
 
     <!-- Stopka -->
     <footer class="w-full max-w-md text-center py-2">
-        <button onclick="resetProgress()" class="text-white/80 hover:text-white text-xs underline font-medium">Zacznij naukę od nowa 🔄</button>
+        <button data-action="reset" class="text-white/80 hover:text-white text-xs underline font-medium">Zacznij naukę od nowa 🔄</button>
     </footer>
 
+    <script src="flashcards.js"></script>
     <script>
         const flashcards = [
 
@@ -131,110 +128,92 @@
             { term: "dein / deine", translation: "twój / twoja", info: "Zaimki dzierżawcze w mianowniku (dein dla r. męskiego i nijakiego, deine dla r. żeńskiego i l. mnogiej)", emoji: "📌" }
         ];
 
-        let currentIndex = 0, isFlipped = false, score = 0;
-        let currentMode = "DE_PL", learningLevel = 1, conjugationIndex = 0;
-
-        const flashcard = document.getElementById("flashcard");
-        const frontLabel = document.getElementById("front-label");
-        const frontMain = document.getElementById("front-main");
-        const cardEmoji = document.getElementById("card-emoji");
-        const backLabel = document.getElementById("back-label");
-        const backContent = document.getElementById("back-content");
-        const cardCounter = document.getElementById("card-counter");
-        const scoreCounter = document.getElementById("score-counter");
+        // Stan specyficzny dla tej strony: tryb ćwiczenia odmiany (poziom 2)
+        let learningLevel = 1;
+        let conjugationIndex = 0;
         const levelButton = document.getElementById("level-button");
 
-        function setMode(mode) {
-            currentMode = mode;
-            const de = document.getElementById("btn-de-pl");
-            const pl = document.getElementById("btn-pl-de");
-            const active = "flex-1 py-2 text-xs font-bold rounded-xl transition bg-white text-purple-700 shadow-md";
-            const inactive = "flex-1 py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20";
-            de.className = mode === "DE_PL" ? active : inactive;
-            pl.className = mode === "PL_DE" ? active : inactive;
-            learningLevel = 1;
-            updateCard();
-        }
+        const infoHtml = card =>
+            `<p class="text-xs text-indigo-200 mt-2 px-2 text-center leading-relaxed"><span class="font-semibold text-amber-300">Info:</span> ${card.info}</p>`;
 
-        function updateCard() {
-            flashcard.classList.remove("rotate-y-180");
-            isFlipped = false;
-            const card = flashcards[currentIndex];
-            cardEmoji.textContent = card.emoji || "📚";
-            levelButton.classList.toggle("hidden", learningLevel !== 2);
+        const practiceButtonHtml = card => card.conjugation
+            ? '<button type="button" data-action="start-conjugation" class="mt-3 bg-amber-300 hover:bg-amber-200 text-indigo-900 font-bold text-sm px-4 py-2 rounded-xl shadow">Ćwicz odmianę →</button>'
+            : '';
 
-            if (learningLevel === 2 && card.conjugation) {
-                const item = card.conjugation[conjugationIndex];
-                frontLabel.textContent = `Odmień: ${card.term.replace(" (czasownik)", "")}`;
-                frontMain.textContent = item.person;
-                backLabel.textContent = "Poprawna forma";
-                backContent.innerHTML = `<div class="bg-white/20 px-4 py-3 rounded-xl"><span class="text-3xl font-black text-amber-300">${item.form}</span></div><p class="text-xs text-indigo-200 mt-2">Osoba ${conjugationIndex + 1} z ${card.conjugation.length}</p>`;
-                cardCounter.textContent = `Odmiana ${conjugationIndex + 1} / ${card.conjugation.length}`;
-                return;
-            }
+        Flashcards.create({
+            cards: flashcards,
+            defaultMode: "DE_PL",
+            modeClasses: {
+                active: "flex-1 py-2 text-xs font-bold rounded-xl transition bg-white text-purple-700 shadow-md",
+                inactive: "flex-1 py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20"
+            },
+            scoreLabel: "🌟 Gwiazdki",
 
-            if (currentMode === "DE_PL") {
-                frontLabel.textContent = "Niemiecki / Wyrażenie";
-                frontMain.textContent = card.term;
-                backLabel.textContent = "Polskie tłumaczenie i reguła";
-                backContent.innerHTML = `<div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-center mb-2"><span class="text-xs text-amber-200 block font-semibold">Tłumaczenie:</span><span class="text-xl font-bold text-white">${card.translation}</span></div><p class="text-xs text-indigo-200 mt-2 px-2 text-center leading-relaxed"><span class="font-semibold text-amber-300">Info:</span> ${card.info}</p>${card.conjugation ? '<button type="button" onclick="event.stopPropagation(); startConjugation()" class="mt-3 bg-amber-300 hover:bg-amber-200 text-indigo-900 font-bold text-sm px-4 py-2 rounded-xl shadow">Ćwicz odmianę →</button>' : ''}`;
-            } else {
-                frontLabel.textContent = "Polskie znaczenie";
-                frontMain.textContent = card.translation;
-                backLabel.textContent = "Niemiecka forma i zasada";
-                backContent.innerHTML = `<div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-center mb-2"><span class="text-xs text-amber-200 block font-semibold">Niemiecki:</span><span class="text-2xl font-black text-amber-300">${card.term}</span></div><p class="text-xs text-indigo-200 mt-2 px-2 text-center leading-relaxed"><span class="font-semibold text-amber-300">Info:</span> ${card.info}</p>${card.conjugation ? '<button type="button" onclick="event.stopPropagation(); startConjugation()" class="mt-3 bg-amber-300 hover:bg-amber-200 text-indigo-900 font-bold text-sm px-4 py-2 rounded-xl shadow">Ćwicz odmianę →</button>' : ''}`;
-            }
-            cardCounter.textContent = `Karta ${currentIndex + 1} / ${flashcards.length}`;
-        }
+            render(card, app) {
+                levelButton.classList.toggle("hidden", learningLevel !== 2);
 
-        function startConjugation() {
-            if (!flashcards[currentIndex].conjugation) return;
-            learningLevel = 2;
-            conjugationIndex = 0;
-            updateCard();
-        }
-
-        function returnToWord() {
-            learningLevel = 1;
-            updateCard();
-        }
-
-        function flipCard() {
-            isFlipped = !isFlipped;
-            flashcard.classList.toggle("rotate-y-180", isFlipped);
-        }
-
-        function nextCard(earnedPoint = false) {
-            if (earnedPoint) {
-                score++;
-                scoreCounter.textContent = `🌟 Gwiazdki: ${score}`;
-            }
-            if (learningLevel === 2) {
-                if (conjugationIndex < flashcards[currentIndex].conjugation.length - 1) conjugationIndex++;
-                else {
-                    learningLevel = 1;
-                    currentIndex = (currentIndex + 1) % flashcards.length;
+                if (learningLevel === 2 && card.conjugation) {
+                    const item = card.conjugation[conjugationIndex];
+                    return {
+                        emoji: card.emoji,
+                        frontLabel: `Odmień: ${card.term.replace(" (czasownik)", "")}`,
+                        frontMain: item.person,
+                        backLabel: "Poprawna forma",
+                        backHtml: `<div class="bg-white/20 px-4 py-3 rounded-xl"><span class="text-3xl font-black text-amber-300">${item.form}</span></div><p class="text-xs text-indigo-200 mt-2">Osoba ${conjugationIndex + 1} z ${card.conjugation.length}</p>`,
+                        counter: `Odmiana ${conjugationIndex + 1} / ${card.conjugation.length}`
+                    };
                 }
-            } else currentIndex = (currentIndex + 1) % flashcards.length;
-            updateCard();
-        }
 
-        function prevCard() {
-            if (learningLevel === 2) {
+                if (app.mode === "DE_PL") {
+                    return {
+                        emoji: card.emoji,
+                        frontLabel: "Niemiecki / Wyrażenie",
+                        frontMain: card.term,
+                        backLabel: "Polskie tłumaczenie i reguła",
+                        backHtml: `<div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-center mb-2"><span class="text-xs text-amber-200 block font-semibold">Tłumaczenie:</span><span class="text-xl font-bold text-white">${card.translation}</span></div>${infoHtml(card)}${practiceButtonHtml(card)}`
+                    };
+                }
+                return {
+                    emoji: card.emoji,
+                    frontLabel: "Polskie znaczenie",
+                    frontMain: card.translation,
+                    backLabel: "Niemiecka forma i zasada",
+                    backHtml: `<div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-center mb-2"><span class="text-xs text-amber-200 block font-semibold">Niemiecki:</span><span class="text-2xl font-black text-amber-300">${card.term}</span></div>${infoHtml(card)}${practiceButtonHtml(card)}`
+                };
+            },
+
+            // W poziomie 2 "dalej" / "wstecz" przechodzą po osobach, nie po kartach.
+            onNext(app) {
+                if (learningLevel !== 2) return false;
+                if (conjugationIndex < app.cards[app.index].conjugation.length - 1) {
+                    conjugationIndex++;
+                    return true;
+                }
+                learningLevel = 1; // koniec odmiany – biblioteka przejdzie do następnej karty
+                return false;
+            },
+            onPrev() {
+                if (learningLevel !== 2) return false;
                 if (conjugationIndex > 0) conjugationIndex--;
                 else learningLevel = 1;
-            } else currentIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
-            updateCard();
-        }
+                return true;
+            },
+            onModeChange() { learningLevel = 1; },
+            onReset() { learningLevel = 1; conjugationIndex = 0; },
 
-        function resetProgress() {
-            currentIndex = 0; score = 0; learningLevel = 1; conjugationIndex = 0;
-            scoreCounter.textContent = "🌟 Gwiazdki: 0";
-            updateCard();
-        }
-
-        updateCard();
+            actions: {
+                "start-conjugation"(app) {
+                    if (!app.cards[app.index].conjugation) return;
+                    learningLevel = 2;
+                    conjugationIndex = 0;
+                    app.update();
+                },
+                "return-to-word"(app) {
+                    learningLevel = 1;
+                    app.update();
+                }
+            }
+        });
     </script>
 </body>
 </html>
-

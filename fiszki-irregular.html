@@ -27,10 +27,10 @@
         
         <!-- Przełącznik języka / kierunku -->
         <div class="flex bg-white/30 backdrop-blur-md p-1.5 rounded-2xl w-full mb-3 shadow-inner">
-            <button id="btn-en-pl" onclick="setMode('EN_PL')" class="flex-1 py-2 text-xs font-bold rounded-xl transition bg-white text-purple-700 shadow-md">
+            <button data-action="mode" data-mode="EN_PL">
                 🇬🇧 Angielski ➔ 🇵🇱 Polski
             </button>
-            <button id="btn-pl-en" onclick="setMode('PL_EN')" class="flex-1 py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20">
+            <button data-action="mode" data-mode="PL_EN">
                 🇵🇱 Polski ➔ 🇬🇧 Angielski
             </button>
         </div>
@@ -42,7 +42,7 @@
         </div>
 
         <!-- Fiszka 3D -->
-        <div class="w-full h-80 perspective-1000 cursor-pointer" id="flashcard-container" onclick="flipCard()">
+        <div class="w-full h-80 perspective-1000 cursor-pointer" id="flashcard-container" data-action="flip">
             <div id="flashcard" class="relative w-full h-full duration-500 transform-style-3d shadow-2xl rounded-3xl">
                 
                 <!-- Przód Fiszki -->
@@ -66,13 +66,13 @@
 
         <!-- Przyciski sterowania -->
         <div class="flex gap-3 w-full mt-5">
-            <button onclick="prevCard()" class="flex-1 bg-white/80 hover:bg-white text-purple-700 font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
+            <button data-action="prev" class="flex-1 bg-white/80 hover:bg-white text-purple-700 font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
                 ⬅️ Wstecz
             </button>
-            <button onclick="nextCard(true)" class="flex-1 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
+            <button data-action="next-known" class="flex-1 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
                 Umiem! ⭐
             </button>
-            <button onclick="nextCard(false)" class="flex-1 bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
+            <button data-action="next" class="flex-1 bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1 text-sm">
                 Dalej ➡️
             </button>
         </div>
@@ -81,10 +81,11 @@
 
     <!-- Stopka -->
     <footer class="w-full max-w-md text-center py-2">
-        <button onclick="resetProgress()" class="text-white/80 hover:text-white text-xs underline font-medium">Zacznij naukę od nowa 🔄</button>
+        <button data-action="reset" class="text-white/80 hover:text-white text-xs underline font-medium">Zacznij naukę od nowa 🔄</button>
     </footer>
 
     <!-- Skrypt aplikacji zawierający wszystkie 81 słówek -->
+    <script src="flashcards.js"></script>
     <script>
         const verbs = [
             { infinitive: "be", past: "was / were", participle: "been", pl: "być", emoji: "🌟" },
@@ -170,106 +171,49 @@
             { infinitive: "write", past: "wrote", participle: "written", pl: "pisać", emoji: "✍️" }
         ];
 
-        let currentIndex = 0;
-        let isFlipped = false;
-        let score = 0;
-        let currentMode = "EN_PL"; // "EN_PL" lub "PL_EN"
+        const formsHtml = verb => `
+            <p class="text-sm"><span class="text-amber-200">Past Simple:</span> <span class="font-bold">${verb.past}</span></p>
+            <p class="text-sm"><span class="text-amber-200">Past Participle:</span> <span class="font-bold">${verb.participle}</span></p>
+        `;
 
-        const flashcard = document.getElementById("flashcard");
-        const frontLabel = document.getElementById("front-label");
-        const frontMain = document.getElementById("front-main");
-        const cardEmoji = document.getElementById("card-emoji");
-        const backLabel = document.getElementById("back-label");
-        const backContent = document.getElementById("back-content");
-        const cardCounter = document.getElementById("card-counter");
-        const scoreCounter = document.getElementById("score-counter");
-
-        function setMode(mode) {
-            currentMode = mode;
-            const btnEnPl = document.getElementById("btn-en-pl");
-            const btnPlEn = document.getElementById("btn-pl-en");
-
-            if (mode === "EN_PL") {
-                btnEnPl.className = "flex-1 py-2 text-xs font-bold rounded-xl transition bg-white text-purple-700 shadow-md";
-                btnPlEn.className = "flex-1 py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20";
-            } else {
-                btnPlEn.className = "flex-1 py-2 text-xs font-bold rounded-xl transition bg-white text-purple-700 shadow-md";
-                btnEnPl.className = "flex-1 py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20";
-            }
-            updateCard();
-        }
-
-        function updateCard() {
-            if (isFlipped) {
-                flashcard.classList.remove("rotate-y-180");
-                isFlipped = false;
-            }
-
-            const current = verbs[currentIndex];
-            setTimeout(() => {
-                cardEmoji.textContent = current.emoji;
-                
-                if (currentMode === "EN_PL") {
-                    frontLabel.textContent = "Bezokolicznik (Infinitive)";
-                    frontMain.textContent = current.infinitive;
-                    backLabel.textContent = "Polskie tłumaczenie i formy";
-                    backContent.innerHTML = `
-                        <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-center mb-2">
-                            <span class="text-xs text-amber-200 block font-semibold">Tłumaczenie:</span>
-                            <span class="text-xl font-bold text-white">${current.pl}</span>
-                        </div>
-                        <p class="text-sm"><span class="text-amber-200">Past Simple:</span> <span class="font-bold">${current.past}</span></p>
-                        <p class="text-sm"><span class="text-amber-200">Past Participle:</span> <span class="font-bold">${current.participle}</span></p>
-                    `;
-                } else {
-                    frontLabel.textContent = "Polskie znaczenie";
-                    frontMain.textContent = current.pl;
-                    backLabel.textContent = "Angielskie formy czasownika";
-                    backContent.innerHTML = `
+        Flashcards.create({
+            cards: verbs,
+            defaultMode: "EN_PL",
+            modeClasses: {
+                active: "flex-1 py-2 text-xs font-bold rounded-xl transition bg-white text-purple-700 shadow-md",
+                inactive: "flex-1 py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20"
+            },
+            scoreLabel: "🌟 Gwiazdki",
+            renderDelay: 150, // zmiana treści dopiero po odwróceniu fiszki, żeby nie podglądać odpowiedzi
+            render(verb, app) {
+                if (app.mode === "EN_PL") {
+                    return {
+                        emoji: verb.emoji,
+                        frontLabel: "Bezokolicznik (Infinitive)",
+                        frontMain: verb.infinitive,
+                        backLabel: "Polskie tłumaczenie i formy",
+                        backHtml: `
+                            <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-center mb-2">
+                                <span class="text-xs text-amber-200 block font-semibold">Tłumaczenie:</span>
+                                <span class="text-xl font-bold text-white">${verb.pl}</span>
+                            </div>
+                            ${formsHtml(verb)}`
+                    };
+                }
+                return {
+                    emoji: verb.emoji,
+                    frontLabel: "Polskie znaczenie",
+                    frontMain: verb.pl,
+                    backLabel: "Angielskie formy czasownika",
+                    backHtml: `
                         <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-center mb-2">
                             <span class="text-xs text-amber-200 block font-semibold">Bezokolicznik:</span>
-                            <span class="text-2xl font-black text-amber-300">${current.infinitive}</span>
+                            <span class="text-2xl font-black text-amber-300">${verb.infinitive}</span>
                         </div>
-                        <p class="text-sm"><span class="text-amber-200">Past Simple:</span> <span class="font-bold">${current.past}</span></p>
-                        <p class="text-sm"><span class="text-amber-200">Past Participle:</span> <span class="font-bold">${current.participle}</span></p>
-                    `;
-                }
-                cardCounter.textContent = `Karta ${currentIndex + 1} / ${verbs.length}`;
-            }, 150);
-        }
-
-        function flipCard() {
-            isFlipped = !isFlipped;
-            if (isFlipped) {
-                flashcard.classList.add("rotate-y-180");
-            } else {
-                flashcard.classList.remove("rotate-y-180");
+                        ${formsHtml(verb)}`
+                };
             }
-        }
-
-        function nextCard(earnedPoint = false) {
-            if (earnedPoint) {
-                score += 1;
-                scoreCounter.textContent = `🌟 Gwiazdki: ${score}`;
-            }
-            currentIndex = (currentIndex + 1) % verbs.length;
-            updateCard();
-        }
-
-        function prevCard() {
-            currentIndex = (currentIndex - 1 + verbs.length) % verbs.length;
-            updateCard();
-        }
-
-        function resetProgress() {
-            currentIndex = 0;
-            score = 0;
-            scoreCounter.textContent = `🌟 Gwiazdki: ${score}`;
-            updateCard();
-        }
-
-        // Inicjalizacja pierwszej karty
-        updateCard();
+        });
     </script>
 </body>
 </html>

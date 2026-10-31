@@ -20,12 +20,8 @@
 
   <main class="w-full max-w-md flex flex-col items-center my-auto">
     <div class="flex bg-white/30 backdrop-blur-md p-1.5 rounded-2xl w-full mb-3 shadow-inner">
-      <button id="btn-pl-symbol" onclick="setMode('PL_SYMBOL')" class="flex-1 py-2 px-1 text-xs font-bold rounded-xl transition bg-white text-blue-700 shadow-md">
-        🇵🇱 Nazwa ➔ Symbol
-      </button>
-      <button id="btn-symbol-pl" onclick="setMode('SYMBOL_PL')" class="flex-1 py-2 px-1 text-xs font-bold rounded-xl transition text-white hover:bg-white/20">
-        Symbol ➔ 🇵🇱 Nazwa
-      </button>
+      <button data-action="mode" data-mode="PL_SYMBOL">🇵🇱 Nazwa ➔ Symbol</button>
+      <button data-action="mode" data-mode="SYMBOL_PL">Symbol ➔ 🇵🇱 Nazwa</button>
     </div>
 
     <div class="flex justify-between w-full mb-3 px-1 text-white font-bold text-sm drop-shadow">
@@ -33,7 +29,7 @@
       <span id="score-counter" class="bg-amber-300/90 px-3 py-1 rounded-full text-amber-900 shadow">⭐ Gwiazdki: 0</span>
     </div>
 
-    <div class="w-full h-80 perspective-1000 cursor-pointer" id="flashcard-container" onclick="flipCard()" role="button" tabindex="0" aria-label="Odwróć fiszkę">
+    <div class="w-full h-80 perspective-1000 cursor-pointer" id="flashcard-container" data-action="flip" role="button" tabindex="0" aria-label="Odwróć fiszkę">
       <div id="flashcard" class="relative w-full h-full duration-500 transform-style-3d shadow-2xl rounded-3xl transition-transform">
         <div class="absolute inset-0 w-full h-full bg-white rounded-3xl p-6 flex flex-col items-center justify-center border-4 border-cyan-200 backface-hidden">
           <div id="card-emoji" class="text-5xl mb-3">🧪</div>
@@ -51,18 +47,18 @@
     </div>
 
     <div class="flex gap-2 w-full mt-5">
-      <button onclick="prevCard()" class="flex-1 bg-white/85 hover:bg-white text-blue-700 font-bold py-3 px-2 rounded-2xl shadow-lg transition active:scale-95 text-sm">⬅️ Wstecz</button>
-      <button onclick="nextCard(true)" class="flex-1 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3 px-2 rounded-2xl shadow-lg transition active:scale-95 text-sm">Umiem! ⭐</button>
-      <button onclick="nextCard(false)" class="flex-1 bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 text-white font-bold py-3 px-2 rounded-2xl shadow-lg transition active:scale-95 text-sm">Dalej ➡️</button>
+      <button data-action="prev" class="flex-1 bg-white/85 hover:bg-white text-blue-700 font-bold py-3 px-2 rounded-2xl shadow-lg transition active:scale-95 text-sm">⬅️ Wstecz</button>
+      <button data-action="next-known" class="flex-1 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3 px-2 rounded-2xl shadow-lg transition active:scale-95 text-sm">Umiem! ⭐</button>
+      <button data-action="next" class="flex-1 bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 text-white font-bold py-3 px-2 rounded-2xl shadow-lg transition active:scale-95 text-sm">Dalej ➡️</button>
     </div>
   </main>
 
   <footer class="w-full max-w-md text-center py-3">
-    <button onclick="resetProgress()" class="text-white/90 hover:text-white text-xs underline font-medium">Zacznij naukę od nowa 🔄</button>
+    <button data-action="reset" class="text-white/90 hover:text-white text-xs underline font-medium">Zacznij naukę od nowa 🔄</button>
   </footer>
 
+  <script src="flashcards.js"></script>
   <script>
-    // Jedno źródło danych: każda fiszka korzysta z tego samego szablonu i logiki.
     const elements = [
       { name: "Wodór", symbol: "H", emoji: "💧" },
       { name: "Sód", symbol: "Na", emoji: "🧂" },
@@ -94,86 +90,33 @@
       { name: "Cyna", symbol: "Sn", emoji: "🥫" }
     ];
 
-    let currentIndex = 0;
-    let isFlipped = false;
-    let score = 0;
-    let currentMode = "PL_SYMBOL";
-
-    const flashcard = document.getElementById("flashcard");
-    const frontLabel = document.getElementById("front-label");
-    const frontMain = document.getElementById("front-main");
-    const cardEmoji = document.getElementById("card-emoji");
-    const backLabel = document.getElementById("back-label");
-    const backContent = document.getElementById("back-content");
-    const cardCounter = document.getElementById("card-counter");
-    const scoreCounter = document.getElementById("score-counter");
-
-    function setMode(mode) {
-      currentMode = mode;
-      const plButton = document.getElementById("btn-pl-symbol");
-      const symbolButton = document.getElementById("btn-symbol-pl");
-      const active = "flex-1 py-2 px-1 text-xs font-bold rounded-xl transition bg-white text-blue-700 shadow-md";
-      const inactive = "flex-1 py-2 px-1 text-xs font-bold rounded-xl transition text-white hover:bg-white/20";
-      plButton.className = mode === "PL_SYMBOL" ? active : inactive;
-      symbolButton.className = mode === "SYMBOL_PL" ? active : inactive;
-      updateCard();
-    }
-
-    function updateCard() {
-      flashcard.classList.remove("rotate-y-180");
-      isFlipped = false;
-      const current = elements[currentIndex];
-
-      cardEmoji.textContent = current.emoji;
-      if (currentMode === "PL_SYMBOL") {
-        frontLabel.textContent = "Nazwa pierwiastka";
-        frontMain.textContent = current.name;
-        backLabel.textContent = "Symbol chemiczny";
-        backContent.innerHTML = `<div class="text-6xl font-black text-white">${current.symbol}</div>`;
-      } else {
-        frontLabel.textContent = "Symbol chemiczny";
-        frontMain.textContent = current.symbol;
-        backLabel.textContent = "Nazwa pierwiastka";
-        backContent.innerHTML = `<div class="text-3xl font-black text-white">${current.name}</div>`;
-      }
-
-      cardCounter.textContent = `Karta ${currentIndex + 1} / ${elements.length}`;
-    }
-
-    function flipCard() {
-      isFlipped = !isFlipped;
-      flashcard.classList.toggle("rotate-y-180", isFlipped);
-    }
-
-    function nextCard(earnedPoint = false) {
-      if (earnedPoint) {
-        score += 1;
-        scoreCounter.textContent = `⭐ Gwiazdki: ${score}`;
-      }
-      currentIndex = (currentIndex + 1) % elements.length;
-      updateCard();
-    }
-
-    function prevCard() {
-      currentIndex = (currentIndex - 1 + elements.length) % elements.length;
-      updateCard();
-    }
-
-    function resetProgress() {
-      currentIndex = 0;
-      score = 0;
-      scoreCounter.textContent = `⭐ Gwiazdki: ${score}`;
-      updateCard();
-    }
-
-    document.getElementById("flashcard-container").addEventListener("keydown", event => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        flipCard();
+    Flashcards.create({
+      cards: elements,
+      defaultMode: "PL_SYMBOL",
+      modeClasses: {
+        active: "flex-1 py-2 px-1 text-xs font-bold rounded-xl transition bg-white text-blue-700 shadow-md",
+        inactive: "flex-1 py-2 px-1 text-xs font-bold rounded-xl transition text-white hover:bg-white/20"
+      },
+      scoreLabel: "⭐ Gwiazdki",
+      render(el, app) {
+        if (app.mode === "PL_SYMBOL") {
+          return {
+            emoji: el.emoji,
+            frontLabel: "Nazwa pierwiastka",
+            frontMain: el.name,
+            backLabel: "Symbol chemiczny",
+            backHtml: `<div class="text-6xl font-black text-white">${el.symbol}</div>`
+          };
+        }
+        return {
+          emoji: el.emoji,
+          frontLabel: "Symbol chemiczny",
+          frontMain: el.symbol,
+          backLabel: "Nazwa pierwiastka",
+          backHtml: `<div class="text-3xl font-black text-white">${el.name}</div>`
+        };
       }
     });
-
-    updateCard();
   </script>
 </body>
 </html>
