@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magiczne Fiszki - Geografia Polski</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-emerald-400 via-teal-500 to-sky-600 min-h-screen flex flex-col items-center justify-between p-4 font-sans select-none">
+
+    <header class="w-full max-w-md text-center py-2">
+        <h1 class="text-3xl font-extrabold text-white drop-shadow-md flex items-center justify-center gap-2">
+            <span>🗺️</span> Geografia Polski <span>🏔️</span>
+        </h1>
+        <p class="text-white text-sm font-medium drop-shadow">Rzeźba, skały, surowce, klimat i wody</p>
+    </header>
+
+    <main class="w-full max-w-md flex flex-col items-center my-auto">
+
+        <!-- Filtr działów -->
+        <div class="grid grid-cols-3 gap-1 bg-white/30 backdrop-blur-md p-1.5 rounded-2xl w-full mb-3 shadow-inner">
+            <button data-action="mode" data-mode="ALL" style="grid-column: 1 / -1">Wszystkie działy</button>
+            <button data-action="mode" data-mode="1">1 · Rzeźba</button>
+            <button data-action="mode" data-mode="2">2 · Pasy</button>
+            <button data-action="mode" data-mode="3">3 · Skały</button>
+            <button data-action="mode" data-mode="4">4 · Surowce</button>
+            <button data-action="mode" data-mode="5">5 · Klimat</button>
+            <button data-action="mode" data-mode="6">6 · Wody</button>
+        </div>
+
+        <div class="flex justify-between w-full mb-3 px-1 text-white font-bold text-sm drop-shadow">
+            <span id="card-counter" class="bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full">Karta 1 / 39</span>
+            <span id="score-counter" class="bg-amber-400/80 backdrop-blur-sm px-3 py-1 rounded-full text-amber-900 shadow">🌟 Gwiazdki: 0</span>
+        </div>
+
+        <div class="w-full h-96 perspective-1000 cursor-pointer" id="flashcard-container" data-action="flip" aria-label="Odwróć fiszkę">
+            <div id="flashcard" class="relative w-full h-full duration-500 transform-style-3d shadow-2xl rounded-3xl transition-transform">
+
+                <!-- Przód: pytanie -->
+                <div class="absolute inset-0 w-full h-full bg-white rounded-3xl p-6 flex flex-col items-center justify-center border-4 border-teal-200 backface-hidden">
+                    <div id="card-emoji" class="text-5xl mb-2">🗺️</div>
+                    <span id="front-label" class="text-xs uppercase tracking-widest text-teal-500 font-bold mb-2 text-center"></span>
+                    <h2 id="front-main" class="text-xl font-extrabold text-teal-800 mb-2 text-center leading-snug"></h2>
+                    <span class="text-xs text-slate-400 mt-2 bg-teal-50 px-4 py-2 rounded-full border border-teal-100">👆 Kliknij, aby sprawdzić!</span>
+                </div>
+
+                <!-- Tył: odpowiedź -->
+                <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-teal-700 to-sky-800 text-white rounded-3xl p-6 flex flex-col items-center justify-center rotate-y-180 backface-hidden border-4 border-teal-300">
+                    <span id="back-label" class="text-xs uppercase tracking-widest text-amber-300 font-bold mb-3">Odpowiedź</span>
+                    <div id="back-content" class="text-center overflow-y-auto max-h-60 w-full"></div>
+                    <button id="steps-button" type="button" data-action="start-steps" class="hidden mt-3 bg-amber-300 hover:bg-amber-200 text-teal-900 font-bold text-sm px-4 py-2 rounded-xl shadow">Ćwicz krok po kroku →</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Powrót z ćwiczenia krok po kroku -->
+        <button id="level-button" data-action="return-to-card" class="hidden w-full mt-3 bg-white/90 hover:bg-white text-teal-700 font-bold py-2 px-3 rounded-xl shadow transition text-sm">↩ Wróć do pytania głównego</button>
+
+        <div class="flex gap-3 w-full mt-5">
+            <button data-action="prev" class="flex-1 bg-white/80 hover:bg-white text-teal-700 font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">⬅️ Wstecz</button>
+            <button data-action="next-known" class="flex-1 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">Umiem! ⭐</button>
+            <button data-action="next" class="flex-1 bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">Dalej ➡️</button>
+        </div>
+
+    </main>
+
+    <footer class="w-full max-w-md text-center py-2">
+        <button data-action="reset" class="text-white/90 hover:text-white text-xs underline font-medium">Zacznij naukę od nowa 🔄</button>
+    </footer>
+
+    <script src="flashcards.js"></script>
+    <script>
+        const blocks = {
+            1: "1 · Ukształtowanie powierzchni Polski",
+            2: "2 · Pasy rzeźby terenu",
+            3: "3 · Skały i minerały",
+            4: "4 · Skały i surowce mineralne Polski",
+            5: "5 · Klimat Polski i system rzeczny",
+            6: "6 · Wody powierzchniowe w Polsce"
+        };
+
+        /*
+         * Format karty:
+         *   q       – pytanie (przód)
+         *   a       – odpowiedź jako tekst            } albo
+         *   lead + items – wstęp i lista punktów      } to
+         *   note    – dopisek pod odpowiedzią (opcjonalnie)
+         *   steps   – [{ q, a }] ćwiczenie dwuetapowe: każdy punkt jako osobna fiszka (opcjonalnie)
+         *   topic   – krótka nazwa tematu pokazywana w ćwiczeniu krok po kroku
+         */
+        const allCards = [
+            // ===== 1: Ukształtowanie powierzchni Polski i pasowy układ rzeźby =====
+            { block: 1, emoji: "🌾", q: "Jaki rodzaj terenu przeważa w Polsce i jaką część terytorium zajmuje?",
+              a: "W Polsce przeważają obszary nizinne, które stanowią około 9/10 jej terytorium." },
+            { block: 1, emoji: "📏", q: "Ile wynosi średnia wysokość Polski oraz średnia wysokość Europy?",
+              a: "Średnia wysokość Polski wynosi 173 m n.p.m., natomiast średnia wysokość Europy to 292 m n.p.m." },
+            { block: 1, emoji: "⬇️", q: "Gdzie znajduje się najniżej położone miejsce w Polsce i jaka jest jego wysokość?",
+              a: "Najniżej położone miejsce znajduje się na Żuławach Wiślanych w okolicy wsi Marzęcino i leży na wysokości 2,2 m p.p.m." },
+            { block: 1, emoji: "🏔️", q: "Jaki jest najwyższy szczyt Polski i ile wynosi jego wysokość?",
+              a: "Najwyższym szczytem są Rysy, których wysokość wynosi 2499 m n.p.m." },
+            { block: 1, emoji: "🧭", q: "W jakim kierunku nachylony jest obszar Polski i jak wpływa to na rzeki?",
+              a: "Obszar Polski jest nachylony w kierunku północno-zachodnim, co powoduje, że większość rzek płynie właśnie w tym kierunku." },
+            { block: 1, emoji: "🗺️", q: "Wymień sześć głównych pasów rzeźby terenu w Polsce.",
+              a: "Wyróżnia się następujące pasy: pobrzeża, pojezierza, Niziny Środkowopolskie, Wyżyny Polskie, Kotliny Podkarpackie oraz góry." },
+
+            // ===== 2: Charakterystyka pasów rzeźby terenu i czynniki ich powstawania =====
+            { block: 2, emoji: "🌊", q: "Co obejmuje pas pobrzeży i jakie formy terenu na nim występują?",
+              a: "Pas pobrzeży obejmuje równinny obszar przylegający do Morza Bałtyckiego. Do występujących tam form należą m.in. klify, mierzeje i wydmy." },
+            { block: 2, emoji: "🏞️", q: "Jaka rzeźba terenu dominuje w pasie pojezierzy i co jest ich charakterystyczną cechą?",
+              a: "W pasie pojezierzy dominuje rzeźba glacjalna. Ich ważną cechą jest pagórkowaty krajobraz z licznymi jeziorami." },
+            { block: 2, emoji: "🌱", q: "Jakie obszary obejmuje pas Nizin Środkowopolskich i jaka rzeźba w nim przeważa?",
+              a: "Pas nizin obejmuje Nizinę Wielkopolską, Nizinę Śląską, Nizinę Mazowiecką, Nizinę Podlaską oraz Polesie Lubelskie. Przeważają tam obszary równinne z rzadko występującymi wzniesieniami." },
+            { block: 2, emoji: "⛰️", q: "Z czego zbudowane jest podłoże w pasie wyżyn?",
+              a: "Podłoże wyżyn jest zbudowane ze skał o odmiennej odporności na niszczenie, które pochodzą z różnych er geologicznych." },
+            { block: 2, emoji: "🕳️", q: "W jaki sposób powstał pas Kotlin Podkarpackich?",
+              a: "Pas Kotlin Podkarpackich (o charakterze nizinnym) powstał w wyniku ruchów górotwórczych jako ogromne obniżenie – zapadlisko przedgórskie." },
+            { block: 2, emoji: "🏔️", q: "Na jakie dwa łańcuchy dzieli się pas gór i co je oddziela?",
+              a: "Pas gór tworzą dwa odmienne łańcuchy: Karpaty i Sudety. Są one oddzielone od siebie Bramą Morawską." },
+            { block: 2, emoji: "💧", q: "Jak powstał krajobraz krasowy na Wyżynie Krakowsko-Częstochowskiej oraz wąwozy na Wyżynie Lubelskiej?",
+              a: "Krajobraz krasowy powstał w wyniku rozpuszczania wapieni. Wąwozy na Wyżynie Lubelskiej powstały natomiast w lessach w wyniku erozyjnej działalności wód opadowych.",
+              topic: "Kras i wąwozy",
+              steps: [
+                  { q: "Jak powstał krajobraz krasowy na Wyżynie Krakowsko-Częstochowskiej?", a: "W wyniku rozpuszczania wapieni." },
+                  { q: "Jak powstały wąwozy na Wyżynie Lubelskiej?", a: "W lessach, w wyniku erozyjnej działalności wód opadowych." }
+              ] },
+
+            // ===== 3: Skały i minerały =====
+            { block: 3, emoji: "🪨", q: "Na jakie trzy główne grupy dzielimy skały ze względu na sposób ich powstawania?",
+              a: "Skały dzielimy na: magmowe, osadowe oraz przeobrażone (metamorficzne)." },
+            { block: 3, emoji: "🌋", q: "Czym różnią się skały magmowe głębinowe od wlewnych i podaj przykłady?",
+              a: "Skały głębinowe powstają z magmy (np. granit, gabro), a skały wlewne powstają z lawy (np. bazalt, andezyt, pumeks).",
+              topic: "Skały magmowe",
+              steps: [
+                  { q: "Jak powstają skały magmowe głębinowe? Podaj przykłady.", a: "Z magmy (np. granit, gabro)." },
+                  { q: "Jak powstają skały magmowe wlewne? Podaj przykłady.", a: "Z lawy (np. bazalt, andezyt, pumeks)." }
+              ] },
+            { block: 3, emoji: "🧱", q: "Jak dzielimy skały osadowe ze względu na ich pochodzenie?",
+              a: "Skały osadowe dzielimy na okruchowe (luźne i zwięzłe), pochodzenia chemicznego oraz pochodzenia organicznego." },
+            { block: 3, emoji: "🏖️", q: "Podaj przykłady skał okruchowych luźnych oraz zwięzłych.",
+              a: "Skały luźne to m.in. ił, piasek i żwir, natomiast skały zwięzłe to m.in. piaskowiec, zlepieńce i glina.",
+              topic: "Skały okruchowe",
+              steps: [
+                  { q: "Podaj przykłady skał okruchowych luźnych.", a: "Ił, piasek i żwir." },
+                  { q: "Podaj przykłady skał okruchowych zwięzłych.", a: "Piaskowiec, zlepieńce i glina." }
+              ] },
+            { block: 3, emoji: "🔥", q: "Czym są skały przeobrażone (metamorficzne) i podaj przykład?",
+              a: "Są to skały magmowe i osadowe przekształcone w wyniku oddziaływania bardzo wysokiej temperatury oraz ogromnego ciśnienia. Przykładem jest gnejs powstały z przeobrażenia granitu." },
+
+            // ===== 4: Skały i surowce mineralne Polski =====
+            { block: 4, emoji: "⛏️", q: "Co to są surowce mineralne?",
+              a: "Są to skały różnego wieku i pochodzenia, które są wydobywane, przetwarzane i wykorzystywane przez człowieka." },
+            { block: 4, emoji: "🧊", q: "Jakie skały pozostawione przez lądolód skandynawski pokrywają około 3/4 powierzchni Polski?",
+              a: "Głównie gliny, piaski i żwiry (występują w północnej i środkowej Polsce)." },
+            { block: 4, emoji: "🗂️", q: "Na jakie cztery grupy dzielą się surowce mineralne ze względu na ich wykorzystanie?",
+              lead: "Surowce mineralne dzielimy na:",
+              items: ["surowce metaliczne", "surowce skalne", "surowce energetyczne", "surowce chemiczne"] },
+            { block: 4, emoji: "🥈", q: "Jakie są główne surowce metaliczne wydobywane w Polsce i gdzie występują?",
+              a: "Są to rudy miedzi z domieszką srebra. Występują na Nizinie Śląskiej w okolicach Lubina i Głogowa.",
+              note: "W Polsce występują też rudy żelaza oraz rudy cynku i ołowiu, ale obecnie się ich nie eksploatuje." },
+            { block: 4, emoji: "🏗️", q: "Do czego wykorzystywane są surowce skalne?",
+              lead: "Mają duże znaczenie dla budownictwa. Przykłady:",
+              items: [
+                  "<strong>skały wapienne</strong> – produkcja cementu",
+                  "<strong>gipsy</strong> – m.in. w Niecce Nidziańskiej",
+                  "<strong>żwiry, piaski i gliny</strong> – na nizinach i pojezierzach (oraz do produkcji ceramiki)",
+                  "<strong>granity, bazalty i marmury</strong> – w budownictwie drogowym i jako materiały dekoracyjne"
+              ],
+              topic: "Surowce skalne",
+              steps: [
+                  { q: "Do czego wykorzystuje się skały wapienne?", a: "Do produkcji cementu." },
+                  { q: "Gdzie występują gipsy?", a: "M.in. w Niecce Nidziańskiej." },
+                  { q: "Gdzie występują żwiry, piaski i gliny i do czego służą?", a: "Na nizinach i pojezierzach; służą też do produkcji ceramiki." },
+                  { q: "Do czego wykorzystuje się granity, bazalty i marmury?", a: "W budownictwie drogowym i jako materiały dekoracyjne." }
+              ] },
+            { block: 4, emoji: "⚡", q: "Jakie znaczenie dla gospodarki mają surowce energetyczne i co do nich należy?",
+              lead: "Mają największe znaczenie, gdyż pozwalają uzyskać energię elektryczną oraz produkty chemiczne. Należą do nich:",
+              items: [
+                  "<strong>węgiel kamienny</strong> – Wyżyna Śląska (Górnośląskie Zagłębie Węglowe), Lubelskie Zagłębie Węglowe",
+                  "<strong>węgiel brunatny</strong> – Bełchatów, Bogatynia, Konin",
+                  "<strong>gaz ziemny</strong> – Pojezierze Wielkopolskie, Nizina Wielkopolska, Podkarpacie, dno Bałtyku",
+                  "<strong>ropa naftowa</strong> – Gorzów Wlkp., Karpaty, dno Bałtyku"
+              ],
+              topic: "Surowce energetyczne",
+              steps: [
+                  { q: "Gdzie wydobywa się węgiel kamienny?", a: "Wyżyna Śląska (Górnośląskie Zagłębie Węglowe) i Lubelskie Zagłębie Węglowe." },
+                  { q: "Gdzie wydobywa się węgiel brunatny?", a: "Bełchatów, Bogatynia, Konin." },
+                  { q: "Gdzie występuje gaz ziemny?", a: "Pojezierze Wielkopolskie, Nizina Wielkopolska, Podkarpacie, dno Bałtyku." },
+                  { q: "Gdzie występuje ropa naftowa?", a: "Gorzów Wlkp., Karpaty, dno Bałtyku." }
+              ] },
+            { block: 4, emoji: "🧂", q: "Jaki surowiec chemiczny ma największe znaczenie w Polsce i gdzie jest wydobywany?",
+              a: "Sól kamienna. Wydobywana jest głównie w okolicach Inowrocławia oraz Kłodawy.",
+              note: "W Polsce występują też złoża siarki, ale ich wydobycie jest niewielkie." },
+
+            // ===== 5: Czynniki kształtujące klimat, cechy klimatu Polski i system rzeczny =====
+            { block: 5, emoji: "🌡️", q: "Jakie są główne czynniki kształtujące klimat w Polsce?",
+              lead: "Czynniki kształtujące klimat:",
+              items: [
+                  "ilość energii słonecznej docierającej do powierzchni terenu",
+                  "położenie między Oceanem Atlantyckim a Azją (kontynentalizm klimatu)",
+                  "położenie nad Morzem Bałtyckim",
+                  "ukształtowanie powierzchni (pasowy układ rzeźby terenu)",
+                  "masy powietrza napływające nad terytorium kraju"
+              ] },
+            { block: 5, emoji: "🌍", q: "Jak nazywamy klimat panujący w Polsce ze względu na jego cechy przejściowe?",
+              a: "Klimat umiarkowany ciepły przejściowy (łączący cechy klimatu morskiego i kontynentalnego)." },
+            { block: 5, emoji: "💨", q: "Czym jest spowodowany poziomy ruch powietrza w atmosferze (wiatr) i czym się charakteryzuje?",
+              a: "Powstaje na skutek różnic ciśnienia atmosferycznego (podawanego w hektopaskalach – hPa). Powietrze przemieszcza się od wyżu barycznego (W) do niżu barycznego (N). Rozkład ciśnienia przedstawia się na mapach za pomocą izobar (linii łączących punkty o tej samej wartości ciśnienia).",
+              topic: "Wiatr",
+              steps: [
+                  { q: "Co powoduje poziomy ruch powietrza (wiatr)? W jakich jednostkach podaje się ciśnienie?", a: "Różnice ciśnienia atmosferycznego; ciśnienie podaje się w hektopaskalach (hPa)." },
+                  { q: "W którą stronę przemieszcza się powietrze?", a: "Od wyżu barycznego (W) do niżu barycznego (N)." },
+                  { q: "Czym są izobary?", a: "Liniami na mapie łączącymi punkty o tej samej wartości ciśnienia." }
+              ] },
+            { block: 5, emoji: "🌬️", q: "Jakie są najważniejsze wiatry lokalne w Polsce?",
+              lead: "Najważniejsze wiatry lokalne:",
+              items: [
+                  "<strong>bryza</strong> – występuje głównie na wybrzeżu Bałtyku; dzienna wieje od morza w stronę lądu, a nocna w przeciwnym kierunku",
+                  "<strong>halny</strong> – ciepły, suchy i porywisty wiatr wiejący z południa w Tatrach"
+              ],
+              topic: "Wiatry lokalne",
+              steps: [
+                  { q: "Gdzie występuje bryza i w którą stronę wieje?", a: "Głównie na wybrzeżu Bałtyku; dzienna wieje od morza w stronę lądu, a nocna w przeciwnym kierunku." },
+                  { q: "Czym charakteryzuje się halny?", a: "Jest to ciepły, suchy i porywisty wiatr wiejący z południa w Tatrach." }
+              ] },
+            { block: 5, emoji: "🌿", q: "Co to jest okres wegetacyjny i ile trwa w Polsce?",
+              a: "Jest to część roku, podczas której średnia dobowa temperatura powietrza przekracza 5°C. W Polsce trwa od 190 dni na Pojezierzu Suwalskim do 225 dni w zachodniej części kraju i w Kotlinie Sandomierskiej (w górach około 100 dni)." },
+            { block: 5, emoji: "🌊", q: "Jakie są główne formy ujść rzecznych i czym się charakteryzują?",
+              lead: "Formy ujść rzecznych:",
+              items: [
+                  "<strong>ujście deltowe</strong> – występuje, gdy morze jest płytkie i brak silnych prądów przybrzeżnych; materiał skalny gromadzi się u ujścia, tworząc deltę (np. Dunaj)",
+                  "<strong>ujście lejkowate</strong> – powstaje w miejscach, gdzie pływy i prądy regularnie usuwają naniesiony materiał skalny (np. Tamiza)"
+              ],
+              topic: "Ujścia rzek",
+              steps: [
+                  { q: "Kiedy powstaje ujście deltowe? Podaj przykład.", a: "Gdy morze jest płytkie i brak silnych prądów przybrzeżnych; materiał skalny gromadzi się u ujścia, tworząc deltę (np. Dunaj)." },
+                  { q: "Kiedy powstaje ujście lejkowate? Podaj przykład.", a: "Tam, gdzie pływy i prądy regularnie usuwają naniesiony materiał skalny (np. Tamiza)." }
+              ] },
+            { block: 5, emoji: "🧭", q: "Jakie pojęcia opisują strukturę systemu rzecznego?",
+              lead: "Struktura systemu rzecznego:",
+              items: [
+                  "<strong>źródło</strong> – miejsce, gdzie wody podziemne wypływają na powierzchnię",
+                  "<strong>system rzeczny</strong> – rzeka główna wraz z dopływami",
+                  "<strong>dorzecze</strong> – obszar, z którego wody spływają do jednego systemu rzecznego",
+                  "<strong>zlewisko</strong> – obszar, z którego wody spływają do jednego morza",
+                  "<strong>dział wodny</strong> – granica między dorzeczami lub zlewiskami"
+              ],
+              topic: "System rzeczny",
+              steps: [
+                  { q: "Czym jest źródło rzeki?", a: "Miejscem, gdzie wody podziemne wypływają na powierzchnię." },
+                  { q: "Co tworzy system rzeczny?", a: "Rzeka główna wraz z dopływami." },
+                  { q: "Czym jest dorzecze?", a: "Obszarem, z którego wody spływają do jednego systemu rzecznego." },
+                  { q: "Czym jest zlewisko?", a: "Obszarem, z którego wody spływają do jednego morza." },
+                  { q: "Czym jest dział wodny?", a: "Granicą między dorzeczami lub zlewiskami." }
+              ] },
+
+            // ===== 6: Wody powierzchniowe w Polsce =====
+            { block: 6, emoji: "🏞️", q: "Jakie są najdłuższe rzeki w Polsce i gdzie uchodzą?",
+              lead: "Najdłuższe rzeki Polski:",
+              items: [
+                  "najdłuższa jest <strong>Wisła</strong> (1022 km)",
+                  "drugie miejsce zajmuje <strong>Odra</strong> (841 km, w tym 716 km na terenie Polski)",
+                  "obie rzeki uchodzą wprost do Morza Bałtyckiego, tworząc jego zlewisko"
+              ],
+              topic: "Najdłuższe rzeki",
+              steps: [
+                  { q: "Jaka rzeka jest najdłuższa w Polsce i ile ma kilometrów?", a: "Wisła – 1022 km." },
+                  { q: "Jaka rzeka zajmuje drugie miejsce pod względem długości?", a: "Odra – 841 km, w tym 716 km na terenie Polski." },
+                  { q: "Gdzie uchodzą Wisła i Odra?", a: "Wprost do Morza Bałtyckiego, tworząc jego zlewisko." }
+              ] },
+            { block: 6, emoji: "⚖️", q: "Czym charakteryzują się dorzecza Wisły i Odry w Polsce?",
+              a: "Są asymetryczne – ich części lewobrzeżne zajmują mniejszą powierzchnię niż prawobrzeżne, co wynika z nachylenia powierzchni naszego kraju w kierunku północno-zachodnim." },
+            { block: 6, emoji: "❄️", q: "Jaki rodzaj zasilania mają rzeki w Polsce i kiedy występują największe przepływy?",
+              a: "Mają zasilanie deszczowo-śnieżne. Największe przepływy występują wczesną wiosną (gdy topnieje śnieg) oraz latem (w wyniku opadów deszczu)." },
+            { block: 6, emoji: "🌀", q: "Co to jest starorzecze i jak powstało nad Odrą?",
+              a: "Jest to zbiornik wodny odcięty od obecnego koryta rzeki. Powstało w wyniku regulacji rzeki Odry, która została przekształcona w najdłuższą śródlądową drogę wodną w Polsce." },
+            { block: 6, emoji: "🏝️", q: "Jakie są najważniejsze typy jezior w Polsce ze względu na genezę (sposób powstania)?",
+              lead: "Typy jezior:",
+              items: [
+                  { text: "<strong>jeziora polodowcowe</strong> (przeważają w Polsce):", sub: [
+                      "<strong>rynnowe</strong> (np. Jeziorak, Gopło) – podłużne i głębokie",
+                      "<strong>morenowe</strong> (np. Śniardwy, Mamry) – płytkie, rozległe, o urozmaiconej linii brzegowej",
+                      "<strong>cyrkowe</strong> (np. Czarny Staw pod Rysami) – małe i głębokie, występujące w górach"
+                  ] },
+                  "<strong>jeziora przybrzeżne</strong> (np. Gardno, Łebsko) – powstały w wyniku odcięcia zatok morskich przez mierzeje"
+              ],
+              topic: "Typy jezior",
+              steps: [
+                  { q: "Jak charakteryzują się jeziora rynnowe? Podaj przykłady.", a: "Są polodowcowe, podłużne i głębokie (np. Jeziorak, Gopło)." },
+                  { q: "Jak charakteryzują się jeziora morenowe? Podaj przykłady.", a: "Są polodowcowe, płytkie, rozległe, o urozmaiconej linii brzegowej (np. Śniardwy, Mamry)." },
+                  { q: "Jak charakteryzują się jeziora cyrkowe? Podaj przykład.", a: "Są polodowcowe, małe i głębokie, występują w górach (np. Czarny Staw pod Rysami)." },
+                  { q: "Jak powstały jeziora przybrzeżne? Podaj przykłady.", a: "W wyniku odcięcia zatok morskich przez mierzeje (np. Gardno, Łebsko)." }
+              ] },
+            { block: 6, emoji: "🏆", q: "Jakie są rekordowe jeziora w Polsce pod względem powierzchni i głębokości?",
+              lead: "Rekordowe jeziora:",
+              items: [
+                  "największe jezioro: <strong>Śniardwy</strong> (113,4 km²)",
+                  "drugie co do wielkości: <strong>Mamry</strong> (102,8 km²)",
+                  "najgłębsze jezioro: <strong>Hańcza</strong> (108,5 m)"
+              ],
+              topic: "Rekordowe jeziora",
+              steps: [
+                  { q: "Które jezioro jest największe w Polsce i ile ma km²?", a: "Śniardwy – 113,4 km²." },
+                  { q: "Które jezioro jest drugie co do wielkości?", a: "Mamry – 102,8 km²." },
+                  { q: "Które jezioro jest najgłębsze w Polsce i ile ma metrów?", a: "Hańcza – 108,5 m." }
+              ] },
+            { block: 6, emoji: "🚢", q: "Jakie znaczenie gospodarcze mają rzeki i jeziora w Polsce?",
+              lead: "Znaczenie gospodarcze:",
+              items: [
+                  "są zużywane przez zakłady przemysłowe oraz elektrownie wodne do produkcji energii elektrycznej",
+                  "umożliwiają produkcję rolną poprzez nawadnianie pól",
+                  "pełnią funkcję dróg śródlądowego transportu wodnego",
+                  "obszary pojezierzy sprzyjają turystyce, rekreacji i sportom wodnym"
+              ] }
+        ];
+
+        // Biblioteka trzyma jedną tablicę kart; filtr działu podmienia jej zawartość w miejscu.
+        const cards = allCards.slice();
+
+        // Stan ćwiczenia dwuetapowego: poziom 1 = karta główna, poziom 2 = kroki (każdy punkt osobno)
+        let learningLevel = 1;
+        let stepIndex = 0;
+        const levelButton = document.getElementById("level-button");
+        const stepsButton = document.getElementById("steps-button");
+
+        const listHtml = (items, nested = false) =>
+            `<ul class="list-disc pl-5 ${nested ? "mt-1" : ""} space-y-1 text-left text-sm leading-snug">` +
+            items.map(item => typeof item === "string"
+                ? `<li>${item}</li>`
+                : `<li>${item.text}${item.sub ? listHtml(item.sub, true) : ""}</li>`
+            ).join("") +
+            "</ul>";
+
+        const answerHtml = card => {
+            let html = "";
+            if (card.a) html += `<p class="text-base font-semibold leading-relaxed">${card.a}</p>`;
+            if (card.lead) html += `<p class="text-sm font-semibold text-left mb-2 text-amber-200">${card.lead}</p>`;
+            if (card.items) html += listHtml(card.items);
+            if (card.note) html += `<p class="text-xs text-teal-100 italic mt-2 leading-snug">${card.note}</p>`;
+            return html;
+        };
+
+        Flashcards.create({
+            cards,
+            defaultMode: "ALL",
+            modeClasses: {
+                active: "py-2 text-xs font-bold rounded-xl transition bg-white text-teal-700 shadow-md",
+                inactive: "py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20"
+            },
+            scoreLabel: "🌟 Gwiazdki",
+
+            render(card) {
+                const inSteps = learningLevel === 2 && card.steps;
+                levelButton.classList.toggle("hidden", !inSteps);
+                stepsButton.classList.toggle("hidden", !!inSteps || !card.steps);
+
+                if (inSteps) {
+                    const step = card.steps[stepIndex];
+                    return {
+                        emoji: card.emoji,
+                        frontLabel: `${card.topic} · krok ${stepIndex + 1} z ${card.steps.length}`,
+                        frontMain: step.q,
+                        backLabel: "Odpowiedź",
+                        backHtml: `<p class="text-base font-semibold leading-relaxed">${step.a}</p>`,
+                        counter: `Krok ${stepIndex + 1} / ${card.steps.length}`
+                    };
+                }
+                return {
+                    emoji: card.emoji,
+                    frontLabel: blocks[card.block],
+                    frontMain: card.q,
+                    backLabel: "Odpowiedź",
+                    backHtml: answerHtml(card)
+                };
+            },
+
+            // W ćwiczeniu krok po kroku "dalej" / "wstecz" przechodzą po punktach, nie po kartach.
+            onNext(app) {
+                if (learningLevel !== 2) return false;
+                if (stepIndex < app.cards[app.index].steps.length - 1) {
+                    stepIndex++;
+                    return true;
+                }
+                learningLevel = 1; // koniec ćwiczenia – biblioteka przejdzie do następnej karty
+                stepIndex = 0;
+                return false;
+            },
+            onPrev() {
+                if (learningLevel !== 2) return false;
+                if (stepIndex > 0) stepIndex--;
+                else learningLevel = 1;
+                return true;
+            },
+            onModeChange(app) {
+                const filtered = app.mode === "ALL" ? allCards : allCards.filter(c => String(c.block) === app.mode);
+                cards.splice(0, cards.length, ...filtered);
+                app.index = 0;
+                learningLevel = 1;
+                stepIndex = 0;
+            },
+            onReset() { learningLevel = 1; stepIndex = 0; },
+
+            actions: {
+                "start-steps"(app) {
+                    if (!app.cards[app.index].steps) return;
+                    learningLevel = 2;
+                    stepIndex = 0;
+                    app.update();
+                },
+                "return-to-card"(app) {
+                    learningLevel = 1;
+                    stepIndex = 0;
+                    app.update();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
