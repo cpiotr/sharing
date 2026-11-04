@@ -376,7 +376,11 @@
                 learningLevel = 1;
                 stepIndex = 0;
             },
-            onReset() { learningLevel = 1; stepIndex = 0; },
+            onReset(app) {
+                learningLevel = 1;
+                stepIndex = 0;
+                app.setMode("ALL"); // nauka od nowa obejmuje wszystkie działy, nie tylko wybrany
+            },
 
             actions: {
                 "set-direction"(app, el) {
