@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magiczne Fiszki - Historia: Ziemie polskie 1815–1849</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-amber-400 via-orange-500 to-red-700 min-h-screen flex flex-col items-center justify-between p-4 font-sans select-none">
+
+    <header class="w-full max-w-md text-center py-2">
+        <h1 class="text-3xl font-extrabold text-white drop-shadow-md flex items-center justify-center gap-2">
+            <span>🏛️</span> Historia <span>⚔️</span>
+        </h1>
+        <p class="text-white text-sm font-medium drop-shadow">Ziemie polskie w latach 1815–1849</p>
+    </header>
+
+    <main class="w-full max-w-md flex flex-col items-center my-auto">
+
+        <!-- Filtr działów -->
+        <div class="grid grid-cols-3 gap-1 bg-white/30 backdrop-blur-md p-1.5 rounded-2xl w-full mb-3 shadow-inner">
+            <button data-action="mode" data-mode="ALL" style="grid-column: 1 / -1">Wszystkie działy</button>
+            <button data-action="mode" data-mode="1">1 · Po 1815</button>
+            <button data-action="mode" data-mode="2">2 · Gospodarka</button>
+            <button data-action="mode" data-mode="3">3 · Spiski</button>
+            <button data-action="mode" data-mode="4">4 · Powstanie</button>
+            <button data-action="mode" data-mode="5">5 · Po 1831</button>
+            <button data-action="mode" data-mode="6">6 · 1846–1849</button>
+        </div>
+
+        <div class="flex justify-between w-full mb-3 px-1 text-white font-bold text-sm drop-shadow">
+            <span id="card-counter" class="bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full">Karta 1 / 45</span>
+            <span id="score-counter" class="bg-amber-400/80 backdrop-blur-sm px-3 py-1 rounded-full text-amber-900 shadow">🌟 Gwiazdki: 0</span>
+        </div>
+
+        <div class="w-full h-96 perspective-1000 cursor-pointer" id="flashcard-container" data-action="flip" aria-label="Odwróć fiszkę">
+            <div id="flashcard" class="relative w-full h-full duration-500 transform-style-3d shadow-2xl rounded-3xl transition-transform">
+
+                <!-- Przód: pytanie -->
+                <div class="absolute inset-0 w-full h-full bg-white rounded-3xl p-6 flex flex-col items-center justify-center border-4 border-orange-200 backface-hidden">
+                    <div id="card-emoji" class="text-5xl mb-2">🏛️</div>
+                    <span id="front-label" class="text-xs uppercase tracking-widest text-orange-600 font-bold mb-2 text-center"></span>
+                    <h2 id="front-main" class="text-xl font-extrabold text-red-900 mb-2 text-center leading-snug"></h2>
+                    <span class="text-xs text-slate-400 mt-2 bg-orange-50 px-4 py-2 rounded-full border border-orange-100">👆 Kliknij, aby sprawdzić!</span>
+                </div>
+
+                <!-- Tył: odpowiedź -->
+                <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-orange-800 to-red-900 text-white rounded-3xl p-6 flex flex-col items-center justify-center rotate-y-180 backface-hidden border-4 border-orange-300">
+                    <span id="back-label" class="text-xs uppercase tracking-widest text-amber-300 font-bold mb-3">Odpowiedź</span>
+                    <div id="back-content" class="text-center overflow-y-auto max-h-60 w-full"></div>
+                    <button id="steps-button" type="button" data-action="start-steps" class="hidden mt-3 bg-amber-300 hover:bg-amber-200 text-red-900 font-bold text-sm px-4 py-2 rounded-xl shadow">Ćwicz krok po kroku →</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Powrót z ćwiczenia krok po kroku -->
+        <button id="level-button" data-action="return-to-card" class="hidden w-full mt-3 bg-white/90 hover:bg-white text-orange-700 font-bold py-2 px-3 rounded-xl shadow transition text-sm">↩ Wróć do pytania głównego</button>
+
+        <div class="flex gap-3 w-full mt-5">
+            <button data-action="prev" class="flex-1 bg-white/80 hover:bg-white text-orange-700 font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">⬅️ Wstecz</button>
+            <button data-action="next-known" class="flex-1 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">Umiem! ⭐</button>
+            <button data-action="next" class="flex-1 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">Dalej ➡️</button>
+        </div>
+
+    </main>
+
+    <footer class="w-full max-w-md text-center py-2">
+        <button data-action="reset" class="text-white/90 hover:text-white text-xs underline font-medium">Zacznij naukę od nowa 🔄</button>
+    </footer>
+
+    <script src="flashcards.js"></script>
+    <script>
+        const blocks = {
+            1: "1 · Ziemie polskie po 1815 r.",
+            2: "2 · Gospodarka, nauka i kultura",
+            3: "3 · Opozycja i spiski",
+            4: "4 · Powstanie listopadowe",
+            5: "5 · Polacy po powstaniu listopadowym",
+            6: "6 · Lata 1846–1849 i Wiosna Ludów"
+        };
+
+        /*
+         * Format karty:
+         *   q       – pytanie (przód)
+         *   a       – odpowiedź jako tekst            } albo
+         *   lead + items – wstęp i lista punktów      } to
+         *   note    – dopisek pod odpowiedzią (opcjonalnie)
+         *   steps   – [{ q, a }] ćwiczenie dwuetapowe: każdy punkt jako osobna fiszka (opcjonalnie)
+         *   topic   – krótka nazwa tematu pokazywana w ćwiczeniu krok po kroku
+         */
+        const allCards = [
+            // ===== 1: Ziemie polskie po 1815 r. =====
+            { block: 1, emoji: "🎩", q: "Czym był kongres wiedeński?",
+              a: "Zgromadzeniem mocarstw europejskich w latach 1814–1815, na którym m.in. zadecydowano o likwidacji Księstwa Warszawskiego oraz nowym podziale ziem polskich." },
+            { block: 1, emoji: "🗺️", q: "Jak wyglądał podział ziem polskich po 1815 r.?",
+              lead: "Ziemie polskie po 1815 r.:",
+              items: [
+                  "<strong>Rosja:</strong> Królestwo Polskie (unia personalna), ziemie zabrane",
+                  "<strong>Prusy:</strong> Wielkie Księstwo Poznańskie, ziemia chełmińska",
+                  "<strong>Austria:</strong> Galicja",
+                  "<strong>Rzeczpospolita Krakowska</strong> – pod protektoratem trzech państw zaborczych"
+              ],
+              topic: "Podział ziem",
+              steps: [
+                  { q: "Czym były ziemie zabrane?", a: "Terytoriami Rzeczypospolitej zajętymi przez Rosję w wyniku rozbiorów, włączonymi bezpośrednio do Cesarstwa Rosyjskiego." },
+                  { q: "Czym była ziemia chełmińska?", a: "Ziemią włączoną bezpośrednio do Prus po upadku Księstwa Warszawskiego." },
+                  { q: "Czym była Galicja?", a: "Nazwą nadawaną ziemiom polskim pod zaborem austriackim." }
+              ] },
+            { block: 1, emoji: "👑", q: "Czym było Królestwo Polskie (Królestwo Kongresowe, Kongresówka)?",
+              a: "Monarchią konstytucyjną utworzoną w 1815 r., połączoną z Rosją unią personalną (car Rosji był jednocześnie królem polskim).",
+              topic: "Królestwo Polskie",
+              steps: [
+                  { q: "Co to jest unia personalna?", a: "Forma połączenia dwóch lub więcej państw osobą wspólnego monarchy (w tym przypadku car Aleksander I jako król Polski)." },
+                  { q: "Kim był namiestnik?", a: "Osobą zastępującą monarchę w Królestwie Polskim podczas jego nieobecności, stojącą na czele Rady Administracyjnej." },
+                  { q: "Czym była Rada Administracyjna?", a: "Organem pełniącym funkcję rządu w Królestwie Polskim." }
+              ] },
+            { block: 1, emoji: "🦅", q: "Czym było Wielkie Księstwo Poznańskie?",
+              a: "Obszarem wchodzącym w skład państwa pruskiego (obejmującym m.in. Wielkopolskę i Kujawy), posiadającym ograniczoną autonomię.",
+              topic: "Wielkie Księstwo Poznańskie",
+              steps: [
+                  { q: "Co to jest autonomia?", a: "Prawo jakiejś zbiorowości do samodzielnego rozstrzygania swoich spraw." },
+                  { q: "Czym był sejm prowincjonalny i kiedy powołano go w Wielkim Księstwie Poznańskim?", a: "Organem przedstawicielskim, w którym obrady toczyły się w języku polskim; w Wielkim Księstwie Poznańskim powołano go w 1824 r." }
+              ] },
+            { block: 1, emoji: "🏰", q: "Czym była Rzeczpospolita Krakowska (Wolne Miasto Kraków)?",
+              a: "Niewielkim obszarem autonomicznym utworzonym w 1815 r., obejmującym Kraków wraz z okolicą, znajdującym się pod protektoratem trzech państw zaborczych.",
+              topic: "Rzeczpospolita Krakowska",
+              steps: [
+                  { q: "Co to jest protektorat?", a: "Forma kontroli państwa silniejszego nad słabszym." },
+                  { q: "Czego nie mógł prowadzić Kraków pod protektoratem?", a: "Własnej polityki zagranicznej." }
+              ] },
+
+            // ===== 2: Gospodarka, nauka i kultura =====
+            { block: 2, emoji: "🌾", q: "Czym była gospodarka folwarczno-pańszczyźniana?",
+              a: "Systemem gospodarki opartym na wielkich majątkach ziemskich (folwarkach) i przymusowej pracy chłopów (pańszczyźnie), dominującym na wsi w Królestwie Polskim.",
+              topic: "Gospodarka folwarczna",
+              steps: [
+                  { q: "Co to jest pańszczyzna?", a: "Bezpłatna praca chłopa na rzecz pana w zamian za użytkowanie ziemi." }
+              ] },
+            { block: 2, emoji: "📜", q: "Co to jest uwłaszczenie chłopów?",
+              a: "Proces nadawania chłopom ziemi na własność oraz znoszenia ich osobistej poddańczości." },
+            { block: 2, emoji: "💰", q: "Kim był Franciszek Ksawery Drucki-Lubecki?",
+              a: "Ministrem skarbu Królestwa Polskiego, żyjącym w latach 1779–1846.",
+              topic: "Drucki-Lubecki",
+              steps: [
+                  { q: "Co zrobił Drucki-Lubecki w 1800 r.?", a: "Wrócił na Litwę i podjął pracę w administracji państwowej." },
+                  { q: "Czym był Bank Polski założony z jego inicjatywy?", a: "Instytucją finansową wspierającą rozwój przemysłu i handlu." }
+              ] },
+            { block: 2, emoji: "🚤", q: "Czym jest Kanał Augustowski?",
+              a: "Drogą wodną zbudowaną w celu połączenia dorzecza Wisły z Niemnem." },
+            { block: 2, emoji: "🎓", q: "Jakie ważne instytucje otwarto w latach 1816–1817?",
+              lead: "Instytucje nauki i kultury:",
+              items: [
+                  "<strong>1816 r.</strong> – Uniwersytet Warszawski",
+                  "<strong>1817 r.</strong> – Zakład Narodowy im. Ossolińskich (Ossolineum) we Lwowie"
+              ],
+              topic: "Ossolineum",
+              steps: [
+                  { q: "Czym było Ossolineum i kto je założył?", a: "Instytutem nauki i kultury (z biblioteką i wydawnictwem) założonym przez Józefa Maksymiliana Ossolińskiego." }
+              ] },
+            { block: 2, emoji: "📖", q: "Jakie wydarzenie uznaje się za symboliczny początek polskiego romantyzmu?",
+              a: "Wydanie „Ballad i romansów” Adama Mickiewicza w 1822 r." },
+            { block: 2, emoji: "🏔️", q: "Czego dokonał w 1818 r. poeta i alpinista Antoni Malczewski?",
+              a: "Zdobył szczyt Mont Blanc." },
+            { block: 2, emoji: "🏫", q: "Co wprowadzono w Wielkim Księstwie Poznańskim w 1825 r.?",
+              a: "Obowiązek szkolny dla dzieci od szóstego roku życia." },
+            { block: 2, emoji: "🖋️", q: "Kim był Joachim Lelewel?",
+              a: "Wybitnym historykiem, profesorem i działaczem niepodległościowym, żyjącym w latach 1786–1861." },
+
+            // ===== 3: Opozycja i spiski =====
+            { block: 3, emoji: "⚖️", q: "Co w 1825 r. nasiliło łamanie konstytucji w Królestwie Polskim?",
+              a: "Wstąpienie na tron carski Mikołaja I." },
+            { block: 3, emoji: "🗣️", q: "Kim byli kaliszanie?",
+              a: "Grupą posłów z województwa kaliskiego, stanowiącą opozycję sejmową, która sprzeciwiała się łamaniu praw i wolności konstytucyjnych przez carów." },
+            { block: 3, emoji: "✂️", q: "Co to jest cenzura?",
+              a: "Państwowa kontrola publikacji (np. gazet, książek) przed ich wydaniem." },
+            { block: 3, emoji: "🤫", q: "Co to jest konspiracja?",
+              a: "Tajna, nielegalna działalność skierowana przeciwko władzy." },
+            { block: 3, emoji: "🕯️", q: "Jakie tajne organizacje działały przed wybuchem powstania listopadowego?",
+              lead: "Tajne organizacje:",
+              items: [
+                  "<strong>Towarzystwo Filomatów</strong> (1817–1823)",
+                  "<strong>Towarzystwo Patriotyczne</strong> (1821–1826)",
+                  "<strong>Sprzysiężenie Podchorążych</strong> (od 1828 r.)"
+              ],
+              topic: "Tajne organizacje",
+              steps: [
+                  { q: "Kogo zrzeszało Towarzystwo Filomatów i czym się zajmowało?", a: "Studentów wileńskich (m.in. Adama Mickiewicza); początkowo skupiało się na samokształceniu, z czasem przyjęło program patriotyczny." },
+                  { q: "Kto założył Towarzystwo Patriotyczne i jaki był jego cel?", a: "Major Walerian Łukasiński; celem była odbudowa państwa polskiego w granicach przedrozbiorowych." },
+                  { q: "Gdzie powstało Sprzysiężenie Podchorążych i do czego dążyło?", a: "W Szkole Podchorążych Piechoty w Warszawie; była to organizacja wojskowa dążąca do wywołania powstania." }
+              ] },
+            { block: 3, emoji: "🎖️", q: "Kim był Piotr Wysocki?",
+              a: "Podporucznikiem (1797–1875), który założył w 1828 r. Sprzysiężenie Podchorążych i przewodził spiskowi w Szkole Podchorążych Piechoty." },
+
+            // ===== 4: Powstanie listopadowe =====
+            { block: 4, emoji: "🌙", q: "Czym była noc listopadowa?",
+              a: "Nocą z 29 na 30 listopada 1830 r., podczas której wybuchło powstanie od ataku spiskowców na Belweder i Arsenał." },
+            { block: 4, emoji: "🤴", q: "Kim był wielki książę Konstanty?",
+              a: "Bratem cara i dowódcą wojsk rosyjskich w Królestwie Polskim, głównym celem nieskutecznego ataku spiskowców w noc listopadową." },
+            { block: 4, emoji: "🧑‍⚖️", q: "Czym była dyktatura powstania?",
+              a: "Władzą wojskową i polityczną skupioną w rękach jednej osoby w czasie kryzysu. W grudniu 1830 r. dyktatorem ogłosił się gen. Józef Chłopicki." },
+            { block: 4, emoji: "📛", q: "Co to jest detronizacja i kogo dotyczyła w 1831 r.?",
+              a: "To pozbawienie panującego monarchy praw do korony. W styczniu 1831 r. sejm Królestwa Polskiego zdetronizował Mikołaja I i zerwał unię z Rosją." },
+            { block: 4, emoji: "⚔️", q: "Czym była wojna polsko-rosyjska w 1831 r.?",
+              a: "Wojną regularnych sił zbrojnych Królestwa Polskiego z armią Imperium Rosyjskiego po odrzuceniu przez cara kompromisu. Rozpoczęła się w lutym 1831 r. wkroczeniem armii rosyjskiej do Królestwa Polskiego." },
+            { block: 4, emoji: "💥", q: "Jakie były główne bitwy wojny polsko-rosyjskiej w 1831 r.?",
+              lead: "Główne bitwy:",
+              items: [
+                  "pod <strong>Stoczkiem</strong>",
+                  "o <strong>Olszynkę Grochowską</strong>",
+                  "pod <strong>Ostrołęką</strong>"
+              ],
+              topic: "Bitwy 1831 r.",
+              steps: [
+                  { q: "Kiedy odbyła się bitwa pod Stoczkiem i jaki był jej wynik?", a: "14 lutego 1831 r.; zwycięstwo Polaków." },
+                  { q: "Kiedy odbyła się bitwa o Olszynkę Grochowską i jaki był jej wynik?", a: "25 lutego 1831 r.; krwawa bitwa, nierozstrzygnięta." },
+                  { q: "Kiedy odbyła się bitwa pod Ostrołęką i jaki był jej wynik?", a: "26 maja 1831 r.; przełomowa bitwa przegrana przez Polaków." }
+              ] },
+            { block: 4, emoji: "🧭", q: "Kim był Ignacy Prądzyński?",
+              a: "Polskim generałem, autorem śmiałego planu wiosennego kontrataku w 1831 r.",
+              topic: "Kontratak Prądzyńskiego",
+              steps: [
+                  { q: "Kiedy Polacy przeprowadzili kontratak pod dowództwem Prądzyńskiego?", a: "W marcu i kwietniu 1831 r." },
+                  { q: "Jakie zwycięstwa przyniósł ten kontratak?", a: "M.in. pod Wawrem, Dębem Wielkim i Iganiem." }
+              ] },
+            { block: 4, emoji: "🐎", q: "Dokąd w maju 1831 r. ruszyły wojska z Królestwa Polskiego ze wsparciem i kto tam walczył?",
+              a: "Na Litwę; walczyła tam m.in. Emilia Plater." },
+            { block: 4, emoji: "🏳️", q: "Jak zakończyło się powstanie listopadowe?",
+              lead: "Koniec powstania:",
+              items: [
+                  "szturm wojsk rosyjskich na warszawską <strong>Wolę</strong>",
+                  "kapitulacja <strong>Warszawy</strong>",
+                  "kapitulacja <strong>Zamościa</strong>"
+              ],
+              topic: "Koniec powstania",
+              steps: [
+                  { q: "Kiedy Rosjanie szturmowali warszawską Wolę i kto tam zginął?", a: "6 września 1831 r.; zginął gen. Józef Sowiński." },
+                  { q: "Kiedy skapitulowała Warszawa?", a: "8 września 1831 r." },
+                  { q: "Kiedy skapitulował Zamość i dlaczego ta data jest ważna?", a: "21 października 1831 r.; była to ostatnia broniąca się załoga powstańcza." }
+              ] },
+
+            // ===== 5: Polacy po powstaniu listopadowym =====
+            { block: 5, emoji: "🧳", q: "Czym była Wielka Emigracja?",
+              a: "Falą wyjazdu z kraju około 10 tysięcy Polaków (przedstawicieli władz, elit, wybitnych artystów, takich jak Fryderyk Chopin czy Adam Mickiewicz) po upadku powstania listopadowego w 1831 r." },
+            { block: 5, emoji: "🏛️", q: "Jakie stronnictwa polityczne utworzyła Wielka Emigracja?",
+              lead: "Stronnictwa emigracyjne:",
+              items: [
+                  "<strong>Komitet Narodowy Polski</strong> – 1831 r., Paryż, Joachim Lelewel",
+                  "<strong>Hôtel Lambert</strong> – 1831 r., Paryż, Adam Jerzy Czartoryski",
+                  "<strong>Towarzystwo Demokratyczne Polskie</strong> – 1832 r., Paryż, m.in. Wiktor Heltman",
+                  "<strong>Gromady Ludu Polskiego</strong> – 1835 r., Wielka Brytania, m.in. Stanisław Worcell"
+              ],
+              topic: "Programy stronnictw",
+              steps: [
+                  { q: "Jak Komitet Narodowy Polski chciał odzyskać niepodległość?", a: "Poprzez współpracę różnych grup społecznych." },
+                  { q: "Na co stawiał konserwatywny obóz Hôtel Lambert?", a: "Na dyplomację, monarchię konstytucyjną i ewolucyjne przemiany społeczne (uwłaszczenie za odszkodowaniem)." },
+                  { q: "Co postulowało Towarzystwo Demokratyczne Polskie?", a: "Powstanie we wszystkich zaborach z udziałem wszystkich warstw oraz uwłaszczenie chłopów." },
+                  { q: "Jaki program głosiły Gromady Ludu Polskiego?", a: "Radykalny program rewolucyjny, wprowadzenie republiki oraz uwłaszczenie chłopów bez odszkodowań." }
+              ] },
+            { block: 5, emoji: "🕵️", q: "Kim był emisariusz?",
+              a: "Tajnym wysłannikiem politycznym wysyłanym przez stronnictwa emigracyjne na ziemie polskie w celu utrzymania kontaktu z ojczyzną i rozwoju działalności spiskowej.",
+              topic: "Działalność spiskowa",
+              steps: [
+                  { q: "Kiedy wznowiono działalność spiskową i misje emisariuszy?", a: "W drugiej połowie lat 30. i na początku lat 40. XIX w." },
+                  { q: "Jaką tajną organizację założono na ziemiach polskich w 1835 r.?", a: "Stowarzyszenie Ludu Polskiego." }
+              ] },
+            { block: 5, emoji: "📕", q: "Czym był Statut organiczny?",
+              a: "Dokumentem narzuconym w 1832 r. przez cara Mikołaja I, który zastąpił zniesioną konstytucję Królestwa Polskiego i mocno ograniczył jego odrębność." },
+            { block: 5, emoji: "⛓️", q: "Jakie represje spotkały Polaków po powstaniu listopadowym?",
+              lead: "Represje:",
+              items: [
+                  "kontrybucja",
+                  "budowa Cytadeli w Warszawie",
+                  "katorga na Syberii",
+                  "stan wojenny w Królestwie Polskim",
+                  "rosyjski kodeks karny"
+              ],
+              topic: "Represje",
+              steps: [
+                  { q: "Co to jest kontrybucja?", a: "Obowiązkowe świadczenie pieniężne nakładane przez zwycięzcę na ludność kraju okupowanego." },
+                  { q: "Czemu miała służyć Cytadela Warszawska i jak nazywano jej część?", a: "Miała zapewnić Rosjanom kontrolę nad miastem i zapobiegać buntom; jej częścią była tzw. Brama Straceń." },
+                  { q: "Co to jest katorga?", a: "Ciężka, niewolnicza praca w kopalniach lub przy wyrębie tajgi." },
+                  { q: "Kiedy ogłoszono stan wojenny w Królestwie Polskim?", a: "W 1833 r." },
+                  { q: "Kiedy wprowadzono w Królestwie Polskim rosyjski kodeks karny?", a: "W 1847 r." }
+              ] },
+            { block: 5, emoji: "😠", q: "Kim był Iwan Paskiewicz?",
+              a: "Namiestnikiem cara w Królestwie Polskim, słynącym z okrucieństwa, stojącym na czele rządu po ograniczeniu jego kompetencji." },
+            { block: 5, emoji: "🗂️", q: "Co to jest gubernia?",
+              a: "Jednostka podziału terytorialnego wprowadzona w Rosji i na ziemiach polskich po zlikwidowaniu dawnych województw." },
+            { block: 5, emoji: "🇷🇺", q: "Co to jest rusyfikacja?",
+              a: "Proces narzucania polskiemu społeczeństwu rosyjskiej kultury, obyczajowości i języka." },
+            { block: 5, emoji: "⛪", q: "Czym był Kościół grekokatolicki (unicki) i co się z nim stało po powstaniu?",
+              a: "Kościołem łączącym obrządek wschodni z uznaniem władzy papieża. Po powstaniu został zlikwidowany i włączony siłą do Cerkwi prawosławnej." },
+
+            // ===== 6: Lata 1846–1849 i Wiosna Ludów =====
+            { block: 6, emoji: "🔥", q: "Czym było powstanie krakowskie?",
+              a: "Próbą zorganizowania w 1846 r. ogólnonarodowego powstania we wszystkich zaborach, która w pełni powiodła się jedynie w Krakowie.",
+              topic: "Powstanie krakowskie",
+              steps: [
+                  { q: "Kiedy wybuchło powstanie krakowskie?", a: "W nocy z 21 na 22 lutego 1846 r." },
+                  { q: "Co zapowiedziano w Manifeście do narodu polskiego?", a: "M.in. równość obywateli wobec prawa, zniesienie pańszczyzny i nadanie ziemi chłopom na własność." },
+                  { q: "Co stało się z Rzeczpospolitą Krakowską 16 listopada 1846 r.?", a: "Została wcielona do Austrii." }
+              ] },
+            { block: 6, emoji: "🪓", q: "Czym była rabacja galicyjska (rzeź galicyjska)?",
+              a: "Masowymi rozruchami i krwawymi wystąpieniami chłopskimi w Galicji w lutym 1846 r., skierowanymi przeciwko dworom szlacheckim. Sprowokowały je m.in. plotki o rzekomych planach mordów na chłopach ze strony szlachty." },
+            { block: 6, emoji: "🧑‍🌾", q: "Kim był Jakub Szela?",
+              a: "Przywódcą chłopskim w okolicach Tarnowa podczas rabacji galicyjskiej w 1846 r." },
+            { block: 6, emoji: "🌷", q: "Czym była Wiosna Ludów?",
+              a: "Serią rewolucji oraz zrywów narodowych i społecznych w Europie w latach 1848–1849, w których aktywnie uczestniczyli Polacy (m.in. w Wielkopolsce, w Galicji oraz walcząc za wolność innych narodów)." },
+            { block: 6, emoji: "📅", q: "Jak przebiegała Wiosna Ludów na ziemiach polskich w 1848 r.?",
+              lead: "Wydarzenia 1848 r.:",
+              items: [
+                  "<strong>marzec</strong> – Komitet Narodowy w Poznaniu",
+                  "<strong>wiosna</strong> – Gwardia Narodowa i uwłaszczenie w Galicji",
+                  "<strong>kwiecień</strong> – powstanie w Wielkopolsce"
+              ],
+              topic: "Wiosna Ludów 1848",
+              steps: [
+                  { q: "Czego Komitet Narodowy w Poznaniu domagał się od władz pruskich?", a: "Pełnej autonomii i spolszczenia administracji w Wielkim Księstwie Poznańskim." },
+                  { q: "Czym była Gwardia Narodowa?", a: "Formacją wojskową tworzoną przez Polaków (m.in. w Krakowie i we Lwowie) w celu utrzymania porządku i obrony praw obywatelskich." },
+                  { q: "Jaką zmianę dla chłopów przyniósł w Galicji 1848 r.?", a: "Dekret o uwłaszczeniu chłopów i zniesienie pańszczyzny w zaborze austriackim." },
+                  { q: "Kto dowodził powstaniem w Wielkopolsce?", a: "Polski generał i działacz polityczny Ludwik Mierosławski (1814–1878)." }
+              ] },
+            { block: 6, emoji: "🤝", q: "Co oznaczało hasło „Za wolność waszą i naszą”?",
+              a: "Było to słynne hasło polskich rewolucjonistów i emigrantów, którzy walczyli o wolność innych narodów (np. we Włoszech czy na Węgrzech), wierząc, że pomoże to odzyskać niepodległość Polsce." },
+            { block: 6, emoji: "🎗️", q: "Kim był Józef Bem?",
+              a: "Wybitnym polskim dowódcą wojskowym, bohaterem narodowym, który największą sławę zdobył jako naczelny wódz antyaustriackiego powstania na Węgrzech w czasie Wiosny Ludów." }
+        ];
+
+        // Biblioteka trzyma jedną tablicę kart; filtr działu podmienia jej zawartość w miejscu.
+        const cards = allCards.slice();
+
+        // Stan ćwiczenia dwuetapowego: poziom 1 = karta główna, poziom 2 = kroki (każdy punkt osobno)
+        let learningLevel = 1;
+        let stepIndex = 0;
+        const levelButton = document.getElementById("level-button");
+        const stepsButton = document.getElementById("steps-button");
+
+        const listHtml = (items, nested = false) =>
+            `<ul class="list-disc pl-5 ${nested ? "mt-1" : ""} space-y-1 text-left text-sm leading-snug">` +
+            items.map(item => typeof item === "string"
+                ? `<li>${item}</li>`
+                : `<li>${item.text}${item.sub ? listHtml(item.sub, true) : ""}</li>`
+            ).join("") +
+            "</ul>";
+
+        const answerHtml = card => {
+            let html = "";
+            if (card.a) html += `<p class="text-base font-semibold leading-relaxed">${card.a}</p>`;
+            if (card.lead) html += `<p class="text-sm font-semibold text-left mb-2 text-amber-200">${card.lead}</p>`;
+            if (card.items) html += listHtml(card.items);
+            if (card.note) html += `<p class="text-xs text-orange-100 italic mt-2 leading-snug">${card.note}</p>`;
+            return html;
+        };
+
+        Flashcards.create({
+            cards,
+            defaultMode: "ALL",
+            modeClasses: {
+                active: "py-2 text-xs font-bold rounded-xl transition bg-white text-orange-700 shadow-md",
+                inactive: "py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20"
+            },
+            scoreLabel: "🌟 Gwiazdki",
+
+            render(card) {
+                const inSteps = learningLevel === 2 && card.steps;
+                levelButton.classList.toggle("hidden", !inSteps);
+                stepsButton.classList.toggle("hidden", !!inSteps || !card.steps);
+
+                if (inSteps) {
+                    const step = card.steps[stepIndex];
+                    return {
+                        emoji: card.emoji,
+                        frontLabel: `${card.topic} · krok ${stepIndex + 1} z ${card.steps.length}`,
+                        frontMain: step.q,
+                        backLabel: "Odpowiedź",
+                        backHtml: `<p class="text-base font-semibold leading-relaxed">${step.a}</p>`,
+                        counter: `Krok ${stepIndex + 1} / ${card.steps.length}`
+                    };
+                }
+                return {
+                    emoji: card.emoji,
+                    frontLabel: blocks[card.block],
+                    frontMain: card.q,
+                    backLabel: "Odpowiedź",
+                    backHtml: answerHtml(card)
+                };
+            },
+
+            // W ćwiczeniu krok po kroku "dalej" / "wstecz" przechodzą po punktach, nie po kartach.
+            onNext(app) {
+                if (learningLevel !== 2) return false;
+                if (stepIndex < app.cards[app.index].steps.length - 1) {
+                    stepIndex++;
+                    return true;
+                }
+                learningLevel = 1; // koniec ćwiczenia – biblioteka przejdzie do następnej karty
+                stepIndex = 0;
+                return false;
+            },
+            onPrev() {
+                if (learningLevel !== 2) return false;
+                if (stepIndex > 0) stepIndex--;
+                else learningLevel = 1;
+                return true;
+            },
+            onModeChange(app) {
+                const filtered = app.mode === "ALL" ? allCards : allCards.filter(c => String(c.block) === app.mode);
+                cards.splice(0, cards.length, ...filtered);
+                app.index = 0;
+                learningLevel = 1;
+                stepIndex = 0;
+            },
+            onReset(app) {
+                learningLevel = 1;
+                stepIndex = 0;
+                app.setMode("ALL"); // nauka od nowa obejmuje wszystkie działy, nie tylko wybrany
+            },
+
+            actions: {
+                "start-steps"(app) {
+                    if (!app.cards[app.index].steps) return;
+                    learningLevel = 2;
+                    stepIndex = 0;
+                    app.update();
+                },
+                "return-to-card"(app) {
+                    learningLevel = 1;
+                    stepIndex = 0;
+                    app.update();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
