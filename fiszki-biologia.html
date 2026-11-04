@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magiczne Fiszki - Biologia: Odżywianie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-lime-400 via-green-500 to-emerald-700 min-h-screen flex flex-col items-center justify-between p-4 font-sans select-none">
+
+    <header class="w-full max-w-md text-center py-2">
+        <h1 class="text-3xl font-extrabold text-white drop-shadow-md flex items-center justify-center gap-2">
+            <span>🧬</span> Biologia <span>🍎</span>
+        </h1>
+        <p class="text-white text-sm font-medium drop-shadow">Składniki pokarmowe i układ pokarmowy</p>
+    </header>
+
+    <main class="w-full max-w-md flex flex-col items-center my-auto">
+
+        <!-- Filtr działów -->
+        <div class="grid grid-cols-3 gap-1 bg-white/30 backdrop-blur-md p-1.5 rounded-2xl w-full mb-3 shadow-inner">
+            <button data-action="mode" data-mode="ALL" style="grid-column: 1 / -1">Wszystkie działy</button>
+            <button data-action="mode" data-mode="1">1 · Białka</button>
+            <button data-action="mode" data-mode="2">2 · Cukry, tłuszcze</button>
+            <button data-action="mode" data-mode="3">3 · Witaminy, sole</button>
+            <button data-action="mode" data-mode="4">4 · Budowa</button>
+            <button data-action="mode" data-mode="5">5 · Trawienie</button>
+            <button data-action="mode" data-mode="6">6 · Zdrowie</button>
+        </div>
+
+        <div class="flex justify-between w-full mb-3 px-1 text-white font-bold text-sm drop-shadow">
+            <span id="card-counter" class="bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full">Karta 1 / 25</span>
+            <span id="score-counter" class="bg-amber-400/80 backdrop-blur-sm px-3 py-1 rounded-full text-amber-900 shadow">🌟 Gwiazdki: 0</span>
+        </div>
+
+        <div class="w-full h-96 perspective-1000 cursor-pointer" id="flashcard-container" data-action="flip" aria-label="Odwróć fiszkę">
+            <div id="flashcard" class="relative w-full h-full duration-500 transform-style-3d shadow-2xl rounded-3xl transition-transform">
+
+                <!-- Przód: pytanie -->
+                <div class="absolute inset-0 w-full h-full bg-white rounded-3xl p-6 flex flex-col items-center justify-center border-4 border-green-200 backface-hidden">
+                    <div id="card-emoji" class="text-5xl mb-2">🧬</div>
+                    <span id="front-label" class="text-xs uppercase tracking-widest text-green-600 font-bold mb-2 text-center"></span>
+                    <h2 id="front-main" class="text-xl font-extrabold text-green-800 mb-2 text-center leading-snug"></h2>
+                    <span class="text-xs text-slate-400 mt-2 bg-green-50 px-4 py-2 rounded-full border border-green-100">👆 Kliknij, aby sprawdzić!</span>
+                </div>
+
+                <!-- Tył: odpowiedź -->
+                <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-green-700 to-emerald-900 text-white rounded-3xl p-6 flex flex-col items-center justify-center rotate-y-180 backface-hidden border-4 border-green-300">
+                    <span id="back-label" class="text-xs uppercase tracking-widest text-amber-300 font-bold mb-3">Odpowiedź</span>
+                    <div id="back-content" class="text-center overflow-y-auto max-h-60 w-full"></div>
+                    <button id="steps-button" type="button" data-action="start-steps" class="hidden mt-3 bg-amber-300 hover:bg-amber-200 text-green-900 font-bold text-sm px-4 py-2 rounded-xl shadow">Ćwicz krok po kroku →</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Powrót z ćwiczenia krok po kroku -->
+        <button id="level-button" data-action="return-to-card" class="hidden w-full mt-3 bg-white/90 hover:bg-white text-green-700 font-bold py-2 px-3 rounded-xl shadow transition text-sm">↩ Wróć do pytania głównego</button>
+
+        <div class="flex gap-3 w-full mt-5">
+            <button data-action="prev" class="flex-1 bg-white/80 hover:bg-white text-green-700 font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">⬅️ Wstecz</button>
+            <button data-action="next-known" class="flex-1 bg-gradient-to-r from-lime-400 to-green-500 hover:from-lime-500 hover:to-green-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">Umiem! ⭐</button>
+            <button data-action="next" class="flex-1 bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">Dalej ➡️</button>
+        </div>
+
+    </main>
+
+    <footer class="w-full max-w-md text-center py-2">
+        <button data-action="reset" class="text-white/90 hover:text-white text-xs underline font-medium">Zacznij naukę od nowa 🔄</button>
+    </footer>
+
+    <script src="flashcards.js"></script>
+    <script>
+        const blocks = {
+            1: "1 · Białka",
+            2: "2 · Cukry i tłuszcze",
+            3: "3 · Witaminy, sole mineralne i woda",
+            4: "4 · Budowa układu pokarmowego i zęby",
+            5: "5 · Trawienie i wchłanianie",
+            6: "6 · Żywienie i choroby"
+        };
+
+        /*
+         * Format karty:
+         *   q       – pytanie (przód)
+         *   a       – odpowiedź jako tekst            } albo
+         *   lead + items – wstęp i lista punktów      } to
+         *   note    – dopisek pod odpowiedzią (opcjonalnie)
+         *   steps   – [{ q, a }] ćwiczenie dwuetapowe: każdy punkt jako osobna fiszka (opcjonalnie)
+         *   topic   – krótka nazwa tematu pokazywana w ćwiczeniu krok po kroku
+         */
+        const allCards = [
+            // ===== 1: Białka =====
+            { block: 1, emoji: "🧬", q: "Co to są aminokwasy egzogenne?",
+              a: "Są to aminokwasy, których organizm człowieka nie potrafi wytworzyć, dlatego musi je pobierać z pożywienia." },
+            { block: 1, emoji: "🥚", q: "Czym różnią się pokarmy pełnowartościowe od niepełnowartościowych?",
+              lead: "To, czy pokarm zawiera wszystkie aminokwasy egzogenne:",
+              items: [
+                  "<strong>pełnowartościowe</strong> – zawierają wszystkie",
+                  "<strong>niepełnowartościowe</strong> – nie zawierają wszystkich"
+              ],
+              topic: "Wartość pokarmów",
+              steps: [
+                  { q: "Jakie są źródła pokarmów pełnowartościowych?", a: "Produkty pochodzenia zwierzęcego, takie jak mięso, jaja, mleko i sery." },
+                  { q: "Jakiego pochodzenia są najczęściej pokarmy niepełnowartościowe?", a: "Najczęściej pochodzenia roślinnego." }
+              ] },
+            { block: 1, emoji: "💪", q: "Jakie główne funkcje pełnią białka w organizmie człowieka?",
+              a: "Budulcową, odpornościową (obronną), transportową i regulacyjną, a także enzymatyczną, ruchową, przekazywania informacji i odbioru bodźców z otoczenia.",
+              topic: "Rodzaje białek",
+              steps: [
+                  { q: "Jaka jest rola białek enzymatycznych?", a: "Przyspieszają przebieg wszystkich reakcji zachodzących w organizmie (np. enzymy trawienne rozkładające składniki pokarmowe)." },
+                  { q: "Do czego służą białka receptorowe? Podaj przykład.", a: "Umożliwiają odbieranie informacji ze środowiska (np. rodopsyna w komórkach oka jest niezbędna w procesie widzenia)." },
+                  { q: "Gdzie występują białka motoryczne i co umożliwiają?", a: "W komórkach mięśniowych; mogą się kurczyć, dzięki czemu umożliwiają ruch (np. aktyna i miozyna)." },
+                  { q: "Jaką funkcję pełnią białka sygnałowe?", a: "Są przenośnikami informacji (np. hormony trzustki regulujące stężenie glukozy we krwi)." },
+                  { q: "Co robią białka transportowe? Podaj przykład.", a: "Przenoszą wiele substancji w organizmie (np. hemoglobina w krwinkach czerwonych transportuje tlen do komórek)." },
+                  { q: "Jaka jest rola białek obronnych?", a: "Unieszkodliwiają drobnoustroje chorobotwórcze (np. przeciwciała znajdujące się we krwi)." },
+                  { q: "Czym charakteryzują się białka budulcowe?", a: "Wchodzą w skład struktur organizmu (np. kolagen – główny składnik skóry, włosów, kości i stawów)." }
+              ] },
+
+            // ===== 2: Cukry i tłuszcze =====
+            { block: 2, emoji: "🍬", q: "Jakie główne funkcje pełnią cukry w organizmie?",
+              a: "Funkcję energetyczną i zapasową.",
+              topic: "Cukry",
+              steps: [
+                  { q: "Jaką funkcję pełnią cukry proste (np. glukoza)?", a: "Głównie energetyczną; szybko trafiają do krwi i dają natychmiastowy zastrzyk energii." },
+                  { q: "Jaką funkcję pełnią cukry złożone (np. glikogen i skrobia)?", a: "Funkcję zapasową." },
+                  { q: "Gdzie magazynowany jest glikogen, a gdzie skrobia?", a: "Glikogen u zwierząt w wątrobie, a skrobia u roślin m.in. w bulwach ziemniaków." }
+              ] },
+            { block: 2, emoji: "🥦", q: "Czym jest błonnik pokarmowy i jakie ma znaczenie?",
+              a: "To składnik (głównie celuloza) bez wartości odżywczych, który ułatwia przesuwanie się pokarmu w jelitach, wchłania dużo wody i pełni funkcję ochronną." },
+            { block: 2, emoji: "🧈", q: "Jakie funkcje pełnią tłuszcze w organizmie?",
+              a: "Energetyczną, zapasową, ochronną i termoregulacyjną. Są też materiałem budulcowym (m.in. błon komórkowych)." },
+            { block: 2, emoji: "🔋", q: "Dlaczego tłuszcze nazywamy związkami wysokoenergetycznymi?",
+              a: "Ponieważ z jednego grama tłuszczu powstaje dwa razy więcej energii niż z tej samej ilości cukru lub białka." },
+
+            // ===== 3: Witaminy, sole mineralne i woda =====
+            { block: 3, emoji: "💊", q: "Na jakie dwie grupy dzielimy witaminy ze względu na rozpuszczalność?",
+              a: "Na witaminy rozpuszczalne w wodzie i rozpuszczalne w tłuszczach.",
+              topic: "Witaminy",
+              steps: [
+                  { q: "Podaj przykłady witamin rozpuszczalnych w wodzie.", a: "C, B₆, B₉, B₁₂." },
+                  { q: "Podaj przykłady witamin rozpuszczalnych w tłuszczach.", a: "A, D, E, K." }
+              ] },
+            { block: 3, emoji: "🧂", q: "Czym różnią się makroelementy od mikroelementów?",
+              a: "Makroelementy występują w organizmie w większej ilości, a mikroelementy w znacznie mniejszej.",
+              topic: "Sole mineralne",
+              steps: [
+                  { q: "Podaj przykłady makroelementów.", a: "Fosfor, wapń, magnez." },
+                  { q: "Podaj przykłady mikroelementów.", a: "Żelazo, jod, fluor." }
+              ] },
+            { block: 3, emoji: "💧", q: "Jaką rolę pełni woda w organizmie?",
+              lead: "Woda:",
+              items: [
+                  "jest środowiskiem licznych reakcji chemicznych",
+                  "umożliwia transport większości substancji",
+                  "umożliwia usuwanie szkodliwych produktów przemiany materii",
+                  "reguluje temperaturę ciała"
+              ] },
+
+            // ===== 4: Budowa układu pokarmowego i zęby =====
+            { block: 4, emoji: "🫃", q: "Z czego składa się układ pokarmowy człowieka?",
+              a: "Z przewodu pokarmowego oraz gruczołów trawiennych wspierających jego pracę.",
+              topic: "Układ pokarmowy",
+              steps: [
+                  { q: "Jakie elementy wchodzą w skład przewodu pokarmowego?", a: "Jama ustna, gardło, przełyk, żołądek, jelito cienkie i jelito grube." },
+                  { q: "Jakie gruczoły trawienne zaliczamy do układu pokarmowego?", a: "Ślinianki, wątrobę i trzustkę." }
+              ] },
+            { block: 4, emoji: "⚙️", q: "Jakie cztery główne procesy zachodzą w układzie pokarmowym?",
+              lead: "Procesy w układzie pokarmowym:",
+              items: [
+                  "<strong>rozdrabnianie i nawilżanie</strong> pokarmu",
+                  "<strong>trawienie</strong> – rozkład substancji na prostsze związki",
+                  "<strong>wchłanianie</strong>",
+                  "<strong>defekacja</strong> – usuwanie resztek"
+              ] },
+            { block: 4, emoji: "🦷", q: "Ile zębów mlecznych ma dziecko, a ile zębów stałych ma dorosły człowiek?",
+              a: "Dziecko ma 20 zębów mlecznych, a dorosły 32 zęby stałe." },
+            { block: 4, emoji: "😁", q: "Jakie wyróżniamy rodzaje zębów?",
+              a: "Siekacze, kły, zęby przedtrzonowe i trzonowe.",
+              topic: "Rodzaje zębów",
+              steps: [
+                  { q: "Do czego służą siekacze?", a: "Do odgryzania kawałków jedzenia." },
+                  { q: "Do czego służą kły?", a: "Pomagają w rozgryzaniu." },
+                  { q: "Do czego służą zęby przedtrzonowe i trzonowe?", a: "Rozcierają pokarm." }
+              ] },
+            { block: 4, emoji: "🔬", q: "Jakie główne części i warstwy wyróżniamy w budowie zęba?",
+              lead: "Budowa zęba:",
+              items: [
+                  "<strong>części:</strong> korona, szyjka i korzeń",
+                  "<strong>warstwy:</strong> szkliwo, zębina i miazga"
+              ],
+              topic: "Warstwy zęba",
+              steps: [
+                  { q: "Czym jest szkliwo?", a: "Twardą powłoką zęba." },
+                  { q: "Co otacza zębina?", a: "Miazgę." },
+                  { q: "Co zawiera miazga?", a: "Naczynia krwionośne i nerw." }
+              ] },
+
+            // ===== 5: Trawienie i wchłanianie =====
+            { block: 5, emoji: "🧪", q: "Jakie enzymy działają w kolejnych odcinkach przewodu pokarmowego i co rozkładają?",
+              lead: "Enzymy trawienne:",
+              items: [
+                  "<strong>jama ustna:</strong> amylaza ślinowa – cukry złożone",
+                  "<strong>żołądek:</strong> pepsyna – białka",
+                  { text: "<strong>dwunastnica:</strong>", sub: [
+                      "amylaza trzustkowa – cukry złożone",
+                      "trypsyna – białka",
+                      "lipaza – tłuszcze"
+                  ] }
+              ],
+              topic: "Odcinki przewodu",
+              steps: [
+                  { q: "Co dzieje się z pokarmem w jamie ustnej?", a: "Jest mechanicznie rozdrabniany i mieszany ze śliną; zachodzi wstępne trawienie cukrów złożonych." },
+                  { q: "Jaką rolę w żołądku pełnią kwas solny i śluz?", a: "Kwas solny aktywuje pepsynę, a śluz chroni wnętrze żołądka. Pokarm jest tam mieszany, a białka trawione częściowo." },
+                  { q: "Co uchodzi do dwunastnicy?", a: "Przewody trzustki i wątroby." },
+                  { q: "Jakie procesy zachodzą w jelicie cienkim?", a: "Trawienie białek, cukrów i tłuszczów oraz wchłanianie produktów trawienia do krwi i limfy." }
+              ] },
+            { block: 5, emoji: "🧩", q: "Co powstaje w wyniku trawienia cukrów, białek i tłuszczów?",
+              lead: "Produkty trawienia:",
+              items: [
+                  "<strong>cukry</strong> → cukry proste",
+                  "<strong>białka</strong> → aminokwasy",
+                  "<strong>tłuszcze</strong> → glicerol i kwasy tłuszczowe"
+              ] },
+            { block: 5, emoji: "🟡", q: "Gdzie powstaje żółć, gdzie się gromadzi i jaką pełni funkcję?",
+              a: "Powstaje w wątrobie, gromadzi się w pęcherzyku żółciowym i rozbija krople tłuszczu na mniejsze kropelki, umożliwiając ich trawienie.",
+              topic: "Żółć",
+              steps: [
+                  { q: "Gdzie powstaje żółć?", a: "W wątrobie." },
+                  { q: "Gdzie gromadzi się żółć?", a: "W pęcherzyku żółciowym." },
+                  { q: "Jaką funkcję pełni żółć?", a: "Rozbija krople tłuszczu na mniejsze kropelki, umożliwiając ich trawienie." }
+              ] },
+            { block: 5, emoji: "🌀", q: "Jak zbudowana jest błona śluzowa jelita cienkiego i jak wpływa to na wchłanianie?",
+              a: "Tworzy fałdy pokryte licznymi kosmkami (zawierającymi naczynia krwionośne i limfatyczne), co znacznie zwiększa powierzchnię wchłaniania substancji odżywczych." },
+            { block: 5, emoji: "🚽", q: "Jaka jest rola jelita grubego?",
+              a: "Zachodzi w nim wchłanianie wody oraz formowanie się kału, który jest usuwany przez odbyt." },
+
+            // ===== 6: Żywienie i choroby =====
+            { block: 6, emoji: "🔥", q: "Co określa wartość energetyczna pokarmu i w czym się ją wyraża?",
+              a: "Określa ilość energii, jaką uzyskamy z danego pokarmu. Wyraża się ją w kilokaloriach (1 kcal = 1000 cal)." },
+            { block: 6, emoji: "🔺", q: "Czym jest piramida zdrowego żywienia i co stanowi jej podstawę?",
+              a: "To schemat przedstawiający proporcje spożywania pokarmów. Jej podstawą (obok warzyw i owoców) jest regularna aktywność fizyczna i zdrowy styl życia." },
+            { block: 6, emoji: "🦠", q: "Jakie wyróżniamy główne grupy chorób układu pokarmowego (poza wrzodami i rakiem)?",
+              lead: "Główne grupy chorób:",
+              items: [
+                  "<strong>choroby zakaźne</strong> – wirusowe zapalenie wątroby (WZW)",
+                  "<strong>choroby pasożytnicze</strong> – wywołane przez pasożyty",
+                  "<strong>zatrucia pokarmowe</strong> – wywołane przez bakterie"
+              ] },
+            { block: 6, emoji: "⚖️", q: "Co to jest anoreksja?",
+              a: "To jadłowstręt psychiczny. Osoby chore uważają, że ich masa ciała jest za duża, i jedzą znacznie mniej, niż powinny, co prowadzi do osłabienia, odwodnienia, a czasem do śmierci." },
+            { block: 6, emoji: "🍽️", q: "Czym objawia się bulimia?",
+              a: "Napadami żarłoczności, po których chory głodzi się lub wywołuje wymioty, co prowadzi do wyniszczenia organizmu." }
+        ];
+
+        // Biblioteka trzyma jedną tablicę kart; filtr działu podmienia jej zawartość w miejscu.
+        const cards = allCards.slice();
+
+        // Stan ćwiczenia dwuetapowego: poziom 1 = karta główna, poziom 2 = kroki (każdy punkt osobno)
+        let learningLevel = 1;
+        let stepIndex = 0;
+        const levelButton = document.getElementById("level-button");
+        const stepsButton = document.getElementById("steps-button");
+
+        const listHtml = (items, nested = false) =>
+            `<ul class="list-disc pl-5 ${nested ? "mt-1" : ""} space-y-1 text-left text-sm leading-snug">` +
+            items.map(item => typeof item === "string"
+                ? `<li>${item}</li>`
+                : `<li>${item.text}${item.sub ? listHtml(item.sub, true) : ""}</li>`
+            ).join("") +
+            "</ul>";
+
+        const answerHtml = card => {
+            let html = "";
+            if (card.a) html += `<p class="text-base font-semibold leading-relaxed">${card.a}</p>`;
+            if (card.lead) html += `<p class="text-sm font-semibold text-left mb-2 text-amber-200">${card.lead}</p>`;
+            if (card.items) html += listHtml(card.items);
+            if (card.note) html += `<p class="text-xs text-green-100 italic mt-2 leading-snug">${card.note}</p>`;
+            return html;
+        };
+
+        Flashcards.create({
+            cards,
+            defaultMode: "ALL",
+            modeClasses: {
+                active: "py-2 text-xs font-bold rounded-xl transition bg-white text-green-700 shadow-md",
+                inactive: "py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20"
+            },
+            scoreLabel: "🌟 Gwiazdki",
+
+            render(card) {
+                const inSteps = learningLevel === 2 && card.steps;
+                levelButton.classList.toggle("hidden", !inSteps);
+                stepsButton.classList.toggle("hidden", !!inSteps || !card.steps);
+
+                if (inSteps) {
+                    const step = card.steps[stepIndex];
+                    return {
+                        emoji: card.emoji,
+                        frontLabel: `${card.topic} · krok ${stepIndex + 1} z ${card.steps.length}`,
+                        frontMain: step.q,
+                        backLabel: "Odpowiedź",
+                        backHtml: `<p class="text-base font-semibold leading-relaxed">${step.a}</p>`,
+                        counter: `Krok ${stepIndex + 1} / ${card.steps.length}`
+                    };
+                }
+                return {
+                    emoji: card.emoji,
+                    frontLabel: blocks[card.block],
+                    frontMain: card.q,
+                    backLabel: "Odpowiedź",
+                    backHtml: answerHtml(card)
+                };
+            },
+
+            // W ćwiczeniu krok po kroku "dalej" / "wstecz" przechodzą po punktach, nie po kartach.
+            onNext(app) {
+                if (learningLevel !== 2) return false;
+                if (stepIndex < app.cards[app.index].steps.length - 1) {
+                    stepIndex++;
+                    return true;
+                }
+                learningLevel = 1; // koniec ćwiczenia – biblioteka przejdzie do następnej karty
+                stepIndex = 0;
+                return false;
+            },
+            onPrev() {
+                if (learningLevel !== 2) return false;
+                if (stepIndex > 0) stepIndex--;
+                else learningLevel = 1;
+                return true;
+            },
+            onModeChange(app) {
+                const filtered = app.mode === "ALL" ? allCards : allCards.filter(c => String(c.block) === app.mode);
+                cards.splice(0, cards.length, ...filtered);
+                app.index = 0;
+                learningLevel = 1;
+                stepIndex = 0;
+            },
+            onReset(app) {
+                learningLevel = 1;
+                stepIndex = 0;
+                app.setMode("ALL"); // nauka od nowa obejmuje wszystkie działy, nie tylko wybrany
+            },
+
+            actions: {
+                "start-steps"(app) {
+                    if (!app.cards[app.index].steps) return;
+                    learningLevel = 2;
+                    stepIndex = 0;
+                    app.update();
+                },
+                "return-to-card"(app) {
+                    learningLevel = 1;
+                    stepIndex = 0;
+                    app.update();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
