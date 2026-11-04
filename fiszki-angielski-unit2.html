@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magiczne Fiszki - Angielski Unit 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-orange-400 via-rose-500 to-fuchsia-600 min-h-screen flex flex-col items-center justify-between p-4 font-sans select-none">
+
+    <header class="w-full max-w-md text-center py-2">
+        <h1 class="text-3xl font-extrabold text-white drop-shadow-md flex items-center justify-center gap-2">
+            <span>🇬🇧</span> Angielski: Unit 2 <span>🇬🇧</span>
+        </h1>
+        <p class="text-white text-sm font-medium drop-shadow">Pogoda, temperatura, przyroda i gramatyka</p>
+    </header>
+
+    <main class="w-full max-w-md flex flex-col items-center my-auto">
+
+        <!-- Filtr działów -->
+        <div class="grid grid-cols-3 gap-1 bg-white/30 backdrop-blur-md p-1.5 rounded-2xl w-full mb-2 shadow-inner">
+            <button data-action="mode" data-mode="ALL" style="grid-column: 1 / -1">Wszystkie działy</button>
+            <button data-action="mode" data-mode="1">1 · Pogoda</button>
+            <button data-action="mode" data-mode="2">2 · Temperatura</button>
+            <button data-action="mode" data-mode="3">3 · Klęski</button>
+            <button data-action="mode" data-mode="4">4 · Przyroda</button>
+            <button data-action="mode" data-mode="5">5 · Wyrażenia</button>
+            <button data-action="mode" data-mode="6">6 · Gramatyka</button>
+        </div>
+
+        <!-- Kierunek (dotyczy słownictwa) -->
+        <div class="flex gap-1 bg-white/30 backdrop-blur-md p-1.5 rounded-2xl w-full mb-3 shadow-inner">
+            <button data-action="set-direction" data-dir="EN_PL" class="flex-1">🇬🇧 Angielski ➔ 🇵🇱 Polski</button>
+            <button data-action="set-direction" data-dir="PL_EN" class="flex-1">🇵🇱 Polski ➔ 🇬🇧 Angielski</button>
+        </div>
+
+        <div class="flex justify-between w-full mb-3 px-1 text-white font-bold text-sm drop-shadow">
+            <span id="card-counter" class="bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full">Karta 1 / 56</span>
+            <span id="score-counter" class="bg-amber-400/80 backdrop-blur-sm px-3 py-1 rounded-full text-amber-900 shadow">🌟 Gwiazdki: 0</span>
+        </div>
+
+        <div class="w-full h-96 perspective-1000 cursor-pointer" id="flashcard-container" data-action="flip" aria-label="Odwróć fiszkę">
+            <div id="flashcard" class="relative w-full h-full duration-500 transform-style-3d shadow-2xl rounded-3xl transition-transform">
+
+                <!-- Przód -->
+                <div class="absolute inset-0 w-full h-full bg-white rounded-3xl p-6 flex flex-col items-center justify-center border-4 border-rose-200 backface-hidden">
+                    <div id="card-emoji" class="text-5xl mb-2">📚</div>
+                    <span id="front-label" class="text-xs uppercase tracking-widest text-rose-400 font-bold mb-2 text-center"></span>
+                    <h2 id="front-main" class="text-3xl font-black text-rose-700 mb-2 text-center leading-snug"></h2>
+                    <span class="text-xs text-slate-400 mt-2 bg-rose-50 px-4 py-2 rounded-full border border-rose-100">👆 Kliknij, aby sprawdzić!</span>
+                </div>
+
+                <!-- Tył -->
+                <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-rose-700 to-fuchsia-800 text-white rounded-3xl p-6 flex flex-col items-center justify-center rotate-y-180 backface-hidden border-4 border-rose-300">
+                    <span id="back-label" class="text-xs uppercase tracking-widest text-amber-300 font-bold mb-3"></span>
+                    <div id="back-content" class="text-center overflow-y-auto max-h-60 w-full"></div>
+                    <button id="steps-button" type="button" data-action="start-steps" class="hidden mt-3 bg-amber-300 hover:bg-amber-200 text-rose-900 font-bold text-sm px-4 py-2 rounded-xl shadow">Ćwicz krok po kroku →</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Powrót z ćwiczenia krok po kroku -->
+        <button id="level-button" data-action="return-to-card" class="hidden w-full mt-3 bg-white/90 hover:bg-white text-rose-700 font-bold py-2 px-3 rounded-xl shadow transition text-sm">↩ Wróć do fiszki głównej</button>
+
+        <div class="flex gap-3 w-full mt-5">
+            <button data-action="prev" class="flex-1 bg-white/80 hover:bg-white text-rose-700 font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">⬅️ Wstecz</button>
+            <button data-action="next-known" class="flex-1 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">Umiem! ⭐</button>
+            <button data-action="next" class="flex-1 bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-500 hover:to-indigo-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">Dalej ➡️</button>
+        </div>
+
+    </main>
+
+    <footer class="w-full max-w-md text-center py-2">
+        <button data-action="reset" class="text-white/90 hover:text-white text-xs underline font-medium">Zacznij naukę od nowa 🔄</button>
+    </footer>
+
+    <script src="flashcards.js"></script>
+    <script>
+        const blocks = {
+            1: "1 · Pogoda (Weather)",
+            2: "2 · Temperatura (Temperature)",
+            3: "3 · Klęski żywiołowe (Natural disasters)",
+            4: "4 · Dzika przyroda i przetrwanie (In the wild)",
+            5: "5 · Wyrażenia stopniujące i wzmacniające",
+            6: "6 · Gramatyka (Grammar Time)"
+        };
+
+        const ex = text => `<span class="text-amber-200 font-semibold">${text}</span>`;
+
+        /*
+         * Karta słownictwa:  { type: "vocab", block, en, pl, emoji, plNote?, steps?: [{ en, pl }], stepsLabel? }
+         * Karta gramatyki:   { type: "grammar", block, q, a | lead + items, ex?, note?, steps?: [{ q, a }], topic?, emoji }
+         */
+        const vocab = (block, rows) => rows.map(([en, pl, emoji, extra]) => ({ type: "vocab", block, en, pl, emoji, ...extra }));
+
+        // 1. Pogoda: rzeczownik na karcie głównej, przymiotnik w ćwiczeniu (poziom 2)
+        const weatherPairs = [
+            ["cloud", "chmura", "☁️", "cloudy", "pochmurny"],
+            ["fog", "mgła", "🌫️", "foggy", "mglisty"],
+            ["ice", "lód", "🧊", "icy", "lodowaty, oblodzony"],
+            ["rain", "deszcz", "🌧️", "rainy", "deszczowy"],
+            ["snow", "śnieg", "❄️", "snowy", "ośnieżony"],
+            ["storm", "burza", "⛈️", "stormy", "burzowy"],
+            ["sun", "słońce", "☀️", "sunny", "słoneczny"],
+            ["wind", "wiatr", "💨", "windy", "wietrzny"]
+        ];
+        const weather = weatherPairs.map(([en, pl, emoji, adjEn, adjPl]) => ({
+            type: "vocab", block: 1, en, pl, emoji,
+            stepsLabel: "Ćwicz przymiotnik →",
+            steps: [{ en: adjEn, pl: adjPl }]
+        }));
+
+        const temperature = vocab(2, [
+            ["boiling", "wrzący, upalny", "🥵"],
+            ["chilly", "chłodny", "🧥", { plNote: "Po polsku „chłodny” to także: <strong>cool</strong>." }],
+            ["cold", "zimny", "🥶"],
+            ["cool", "chłodny", "😎", { plNote: "Po polsku „chłodny” to także: <strong>chilly</strong>." }],
+            ["degree", "stopień", "🌡️"],
+            ["freezing", "mroźny", "🧊"],
+            ["hot", "gorący", "🔥"],
+            ["mild", "łagodny, umiarkowany", "🌤️"],
+            ["minus", "ujemny", "➖"],
+            ["warm", "ciepły", "🌞"]
+        ]);
+
+        const disasters = vocab(3, [
+            ["avalanche", "lawina", "🏔️"],
+            ["drought", "susza", "🏜️"],
+            ["earthquake", "trzęsienie ziemi", "🌍"],
+            ["flood", "powódź", "🌊"],
+            ["hurricane", "huragan", "🌀"],
+            ["tsunami", "tsunami", "🌊"],
+            ["volcanic eruption", "wybuch wulkanu", "🌋"]
+        ]);
+
+        const wild = vocab(4, [
+            ["bat", "nietoperz", "🦇"],
+            ["bear", "niedźwiedź", "🐻"],
+            ["cave", "jaskinia", "🕳️"],
+            ["leaf (leaves)", "liść (liście)", "🍃"],
+            ["path", "ścieżka", "🛤️"],
+            ["sky", "niebo", "🌌"],
+            ["spider", "pająk", "🕷️"],
+            ["star", "gwiazda", "⭐"],
+            ["sunset", "zachód słońca", "🌅"],
+            ["waterfall", "wodospad", "💦"],
+            ["wildlife", "dzika przyroda", "🦌"],
+            ["make / build a fire", "rozpalić / zbudować ognisko", "🔥"],
+            ["make / build a shelter", "zbudować szałas", "⛺"],
+            ["sleep outside", "spać na zewnątrz", "🛌"],
+            ["watch the stars", "obserwować gwiazdy", "🔭"],
+            ["island", "wyspa", "🏝️"],
+            ["mud", "błoto", "🟤"],
+            ["survival", "przetrwanie", "🧭"]
+        ]);
+
+        const intensifiers = vocab(5, [
+            ["absolutely freezing", "przeraziście zimny", "🥶"],
+            ["completely crazy", "zupełnie szalony", "🤪"],
+            ["quite long", "całkiem długi", "📏"],
+            ["really interesting", "naprawdę interesujący", "🤔"],
+            ["totally amazing", "kompletnie zadziwiający", "🤩"],
+            ["very difficult", "bardzo trudny", "😓"]
+        ]);
+
+        const grammar = [
+            { type: "grammar", block: 6, emoji: "⏪", q: "Do czego używamy czasu Past Simple (czasu przeszłego prostego)?",
+              a: "Do opowiadania o wydarzeniach i sytuacjach z przeszłości, które się zakończyły." },
+
+            { type: "grammar", block: 6, emoji: "✏️", q: "Jak tworzymy Past Simple od czasowników regularnych?",
+              lead: "Dodajemy końcówkę <strong>-ed</strong>:",
+              items: [`happen → ${ex("happened")}`, `study → ${ex("studied")}`],
+              note: "Uwaga: przy study końcówka -y zmienia się w -ied.",
+              topic: "Past Simple – regularne",
+              steps: [
+                  { q: "Jaką końcówkę dodajemy do czasowników regularnych w Past Simple?", a: "Końcówkę <strong>-ed</strong>." },
+                  { q: "Podaj Past Simple od: happen", a: ex("happened") },
+                  { q: "Podaj Past Simple od: study", a: ex("studied") }
+              ] },
+
+            { type: "grammar", block: 6, emoji: "🔀", q: "Jak tworzymy Past Simple od czasowników nieregularnych?",
+              a: "Korzystamy z 2. formy z tabeli czasowników nieregularnych.",
+              items: [`see → ${ex("saw")}`, `go → ${ex("went")}`],
+              topic: "Past Simple – nieregularne",
+              steps: [
+                  { q: "Podaj Past Simple od: see", a: ex("saw") },
+                  { q: "Podaj Past Simple od: go", a: ex("went") }
+              ] },
+
+            { type: "grammar", block: 6, emoji: "📅", q: "Jakich określeń czasu używamy z Past Simple?",
+              lead: "Określenia czasu:",
+              items: [
+                  `${ex("yesterday")} – wczoraj`,
+                  `${ex("two days ago")} – dwa dni temu`,
+                  `${ex("last week")} – w zeszłym tygodniu`,
+                  `${ex("in 2001")} – w 2001 roku`
+              ],
+              topic: "Określenia czasu",
+              steps: [
+                  { q: "Jak po angielsku: „wczoraj”?", a: ex("yesterday") },
+                  { q: "Jak po angielsku: „dwa dni temu”?", a: ex("two days ago") },
+                  { q: "Jak po angielsku: „w zeszłym tygodniu”?", a: ex("last week") },
+                  { q: "Jak po angielsku: „w 2001 roku”?", a: ex("in 2001") }
+              ] },
+
+            { type: "grammar", block: 6, emoji: "🚶", q: "Do czego używamy czasu Past Continuous?",
+              a: "Do opisania czynności, która trwała w określonym momencie w przeszłości.",
+              ex: `${ex("I was walking in the forest.")} – Szedłem po lesie.` },
+
+            { type: "grammar", block: 6, emoji: "🐻", q: "Kiedy łączymy Past Simple i Past Continuous w jednym zdaniu?",
+              a: "Gdy dłuższa czynność w trakcie (Past Continuous) została przerwana przez krótszą (Past Simple).",
+              ex: `${ex("I was walking in the forest when I suddenly saw a bear.")} – Szedłem po lesie, kiedy nagle zobaczyłem niedźwiedzia.`,
+              topic: "Past Simple vs. Past Continuous",
+              steps: [
+                  { q: "W zdaniu „I was walking in the forest when I suddenly saw a bear” – która czynność jest dłuższa, trwająca w tle, i w jakim czasie?",
+                    a: `${ex("was walking")} – Past Continuous (czynność w toku).` },
+                  { q: "W tym samym zdaniu – która czynność jest krótsza i przerywa dłuższą, i w jakim czasie?",
+                    a: `${ex("saw")} – Past Simple (krótsza czynność, która przerwała dłuższą).` },
+                  { q: "Przetłumacz: „I was walking in the forest when I suddenly saw a bear.”",
+                    a: "Szedłem po lesie, kiedy nagle zobaczyłem niedźwiedzia." }
+              ] },
+
+            { type: "grammar", block: 6, emoji: "🧩", q: "Jak dzielimy zaimki nieokreślone (some-, any-, no-, every-) i kiedy ich używamy?",
+              lead: "Zaimki odnoszą się do osób (-body), rzeczy (-thing) i miejsc (-where):",
+              items: [
+                  `<strong>some-</strong> (somebody, something, somewhere) – zdania twierdzące`,
+                  `<strong>any-</strong> (anybody, anything, anywhere) – zdania przeczące i pytające`,
+                  `<strong>no-</strong> (nobody, nothing, nowhere) – znaczenie przeczące, czasownik twierdzący`,
+                  `<strong>every-</strong> (everybody, everything, everywhere) – zdania twierdzące, przeczące i pytania`
+              ],
+              topic: "Zaimki nieokreślone",
+              steps: [
+                  { q: "Kiedy używamy zaimków z some- (somebody, something, somewhere)?",
+                    a: `W zdaniach twierdzących, np. ${ex("I want to go somewhere.")} (Chcę gdzieś pójść.)` },
+                  { q: "Kiedy używamy zaimków z any- (anybody, anything, anywhere)?",
+                    a: `W zdaniach przeczących i pytających, np. ${ex("We can't do anything because it's raining.")} (Nic nie możemy robić, bo pada deszcz.)` },
+                  { q: "Jak działają zaimki z no- (nobody, nothing, nowhere)?",
+                    a: `Mają znaczenie przeczące w połączeniu z twierdzącym czasownikiem, np. ${ex("There's nothing on TV.")} = ${ex("There isn't anything on TV.")}` },
+                  { q: "Kiedy używamy zaimków z every- (everybody, everything, everywhere)?",
+                    a: `Zarówno w zdaniach twierdzących, jak i przeczących oraz w pytaniach, np. ${ex("Everybody loves sunny weather.")} (Wszyscy kochają słoneczną pogodę.)` }
+              ] }
+        ];
+
+        const allCards = [...weather, ...temperature, ...disasters, ...wild, ...intensifiers, ...grammar];
+
+        // Biblioteka trzyma jedną tablicę kart; filtr działu podmienia jej zawartość w miejscu.
+        const cards = allCards.slice();
+
+        // Stan strony: kierunek tłumaczenia (słownictwo) i ćwiczenie dwuetapowe
+        let direction = "EN_PL";
+        let learningLevel = 1;
+        let stepIndex = 0;
+        const levelButton = document.getElementById("level-button");
+        const stepsButton = document.getElementById("steps-button");
+
+        const modeActive = "py-2 text-xs font-bold rounded-xl transition bg-white text-rose-700 shadow-md";
+        const modeInactive = "py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20";
+
+        function styleDirectionButtons() {
+            document.querySelectorAll("[data-dir]").forEach(button => {
+                button.className = (button.dataset.dir === direction ? modeActive : modeInactive) + " flex-1";
+            });
+        }
+
+        const listHtml = items =>
+            `<ul class="list-disc pl-5 space-y-1 text-left text-sm leading-snug">${items.map(i => `<li>${i}</li>`).join("")}</ul>`;
+
+        const grammarAnswerHtml = card => {
+            let html = "";
+            if (card.a) html += `<p class="text-base font-semibold leading-relaxed ${card.items ? "text-left mb-2" : ""}">${card.a}</p>`;
+            if (card.lead) html += `<p class="text-sm font-semibold text-left mb-2 text-amber-200">${card.lead}</p>`;
+            if (card.items) html += listHtml(card.items);
+            if (card.ex) html += `<p class="text-sm mt-3 leading-snug">${card.ex}</p>`;
+            if (card.note) html += `<p class="text-xs text-rose-100 italic mt-2 leading-snug">${card.note}</p>`;
+            return html;
+        };
+
+        const vocabBackHtml = (text, note) =>
+            `<p class="text-3xl font-black text-amber-300 leading-snug">${text}</p>` +
+            (note ? `<p class="text-xs text-rose-100 italic mt-3 leading-snug">${note}</p>` : "");
+
+        const setFrontStyle = (app, vocabCard) => {
+            app.els.frontMain.className = vocabCard
+                ? "text-3xl font-black text-rose-700 mb-2 text-center leading-snug"
+                : "text-xl font-extrabold text-rose-800 mb-2 text-center leading-snug";
+        };
+
+        Flashcards.create({
+            cards,
+            defaultMode: "ALL",
+            modeClasses: { active: modeActive, inactive: modeInactive },
+            scoreLabel: "🌟 Gwiazdki",
+
+            render(card, app) {
+                const isVocab = card.type === "vocab";
+                const dirEN = direction === "EN_PL";
+                const inSteps = learningLevel === 2 && card.steps;
+
+                levelButton.classList.toggle("hidden", !inSteps);
+                stepsButton.classList.toggle("hidden", !!inSteps || !card.steps);
+                if (card.steps) stepsButton.textContent = card.stepsLabel || "Ćwicz krok po kroku →";
+
+                if (inSteps) {
+                    const step = card.steps[stepIndex];
+                    const counter = `Krok ${stepIndex + 1} / ${card.steps.length}`;
+                    if (isVocab) {
+                        setFrontStyle(app, true);
+                        return {
+                            emoji: card.emoji,
+                            frontLabel: `Przymiotnik od: ${dirEN ? card.en : card.pl}`,
+                            frontMain: dirEN ? step.en : step.pl,
+                            backLabel: dirEN ? "Polski" : "Angielski",
+                            backHtml: vocabBackHtml(dirEN ? step.pl : step.en),
+                            counter
+                        };
+                    }
+                    setFrontStyle(app, false);
+                    return {
+                        emoji: card.emoji,
+                        frontLabel: `${card.topic} · krok ${stepIndex + 1} z ${card.steps.length}`,
+                        frontMain: step.q,
+                        backLabel: "Odpowiedź",
+                        backHtml: `<p class="text-base font-semibold leading-relaxed">${step.a}</p>`,
+                        counter
+                    };
+                }
+
+                if (isVocab) {
+                    setFrontStyle(app, true);
+                    return {
+                        emoji: card.emoji,
+                        frontLabel: `${blocks[card.block]} · ${dirEN ? "EN ➔ PL" : "PL ➔ EN"}`,
+                        frontMain: dirEN ? card.en : card.pl,
+                        backLabel: dirEN ? "Polski" : "Angielski",
+                        backHtml: vocabBackHtml(dirEN ? card.pl : card.en, dirEN ? "" : card.plNote)
+                    };
+                }
+                setFrontStyle(app, false);
+                return {
+                    emoji: card.emoji,
+                    frontLabel: blocks[card.block],
+                    frontMain: card.q,
+                    backLabel: "Odpowiedź",
+                    backHtml: grammarAnswerHtml(card)
+                };
+            },
+
+            // W ćwiczeniu krok po kroku "dalej" / "wstecz" przechodzą po krokach, nie po kartach.
+            onNext(app) {
+                if (learningLevel !== 2) return false;
+                if (stepIndex < app.cards[app.index].steps.length - 1) {
+                    stepIndex++;
+                    return true;
+                }
+                learningLevel = 1; // koniec ćwiczenia – biblioteka przejdzie do następnej karty
+                stepIndex = 0;
+                return false;
+            },
+            onPrev() {
+                if (learningLevel !== 2) return false;
+                if (stepIndex > 0) stepIndex--;
+                else learningLevel = 1;
+                return true;
+            },
+            onModeChange(app) {
+                const filtered = app.mode === "ALL" ? allCards : allCards.filter(c => String(c.block) === app.mode);
+                cards.splice(0, cards.length, ...filtered);
+                app.index = 0;
+                learningLevel = 1;
+                stepIndex = 0;
+            },
+            onReset() { learningLevel = 1; stepIndex = 0; },
+
+            actions: {
+                "set-direction"(app, el) {
+                    direction = el.dataset.dir;
+                    styleDirectionButtons();
+                    app.update();
+                },
+                "start-steps"(app) {
+                    if (!app.cards[app.index].steps) return;
+                    learningLevel = 2;
+                    stepIndex = 0;
+                    app.update();
+                },
+                "return-to-card"(app) {
+                    learningLevel = 1;
+                    stepIndex = 0;
+                    app.update();
+                }
+            }
+        });
+
+        styleDirectionButtons();
+    </script>
+</body>
+</html>
