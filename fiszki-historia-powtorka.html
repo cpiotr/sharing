@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magiczne Fiszki - Historia: powtórka 1815–1848</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-amber-400 via-orange-500 to-red-700 min-h-screen flex flex-col items-center justify-between p-4 font-sans select-none">
+
+    <header class="w-full max-w-md text-center py-2">
+        <h1 class="text-3xl font-extrabold text-white drop-shadow-md flex items-center justify-center gap-2">
+            <span>📝</span> Historia – powtórka <span>⚔️</span>
+        </h1>
+        <p class="text-white text-sm font-medium drop-shadow">Ziemie polskie w latach 1815–1848</p>
+    </header>
+
+    <main class="w-full max-w-md flex flex-col items-center my-auto">
+
+        <!-- Filtr działów -->
+        <div class="grid grid-cols-3 gap-1 bg-white/30 backdrop-blur-md p-1.5 rounded-2xl w-full mb-3 shadow-inner">
+            <button data-action="mode" data-mode="ALL" style="grid-column: 1 / -1">Wszystkie działy</button>
+            <button data-action="mode" data-mode="1">1 · Kultura</button>
+            <button data-action="mode" data-mode="2">2 · Spiski</button>
+            <button data-action="mode" data-mode="3">3 · Powstanie</button>
+            <button data-action="mode" data-mode="4">4 · Po 1831</button>
+            <button data-action="mode" data-mode="5">5 · 1846–1848</button>
+            <button data-action="mode" data-mode="6">6 · Prawda/fałsz</button>
+        </div>
+
+        <div class="flex justify-between w-full mb-3 px-1 text-white font-bold text-sm drop-shadow">
+            <span id="card-counter" class="bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full">Karta 1 / 37</span>
+            <span id="score-counter" class="bg-amber-400/80 backdrop-blur-sm px-3 py-1 rounded-full text-amber-900 shadow">🌟 Gwiazdki: 0</span>
+        </div>
+
+        <div class="w-full h-96 perspective-1000 cursor-pointer" id="flashcard-container" data-action="flip" aria-label="Odwróć fiszkę">
+            <div id="flashcard" class="relative w-full h-full duration-500 transform-style-3d shadow-2xl rounded-3xl transition-transform">
+
+                <!-- Przód: pytanie -->
+                <div class="absolute inset-0 w-full h-full bg-white rounded-3xl p-6 flex flex-col items-center justify-center border-4 border-orange-200 backface-hidden">
+                    <div id="card-emoji" class="text-5xl mb-2">🏛️</div>
+                    <span id="front-label" class="text-xs uppercase tracking-widest text-orange-600 font-bold mb-2 text-center"></span>
+                    <h2 id="front-main" class="text-xl font-extrabold text-red-900 mb-2 text-center leading-snug"></h2>
+                    <span class="text-xs text-slate-400 mt-2 bg-orange-50 px-4 py-2 rounded-full border border-orange-100">👆 Kliknij, aby sprawdzić!</span>
+                </div>
+
+                <!-- Tył: odpowiedź -->
+                <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-orange-800 to-red-900 text-white rounded-3xl p-6 flex flex-col items-center justify-center rotate-y-180 backface-hidden border-4 border-orange-300">
+                    <span id="back-label" class="text-xs uppercase tracking-widest text-amber-300 font-bold mb-3">Odpowiedź</span>
+                    <div id="back-content" class="text-center overflow-y-auto max-h-60 w-full"></div>
+                    <button id="steps-button" type="button" data-action="start-steps" class="hidden mt-3 bg-amber-300 hover:bg-amber-200 text-red-900 font-bold text-sm px-4 py-2 rounded-xl shadow">Ćwicz krok po kroku →</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Powrót z ćwiczenia krok po kroku -->
+        <button id="level-button" data-action="return-to-card" class="hidden w-full mt-3 bg-white/90 hover:bg-white text-orange-700 font-bold py-2 px-3 rounded-xl shadow transition text-sm">↩ Wróć do pytania głównego</button>
+
+        <div class="flex gap-3 w-full mt-5">
+            <button data-action="prev" class="flex-1 bg-white/80 hover:bg-white text-orange-700 font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">⬅️ Wstecz</button>
+            <button data-action="next-known" class="flex-1 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">Umiem! ⭐</button>
+            <button data-action="next" class="flex-1 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold py-3 px-3 rounded-2xl shadow-lg transition transform active:scale-95 text-sm">Dalej ➡️</button>
+        </div>
+
+    </main>
+
+    <footer class="w-full max-w-md text-center py-2">
+        <button data-action="reset" class="text-white/90 hover:text-white text-xs underline font-medium">Zacznij naukę od nowa 🔄</button>
+    </footer>
+
+    <script src="flashcards.js"></script>
+    <script>
+        const blocks = {
+            1: "1 · Nauka i kultura",
+            2: "2 · Tajne organizacje",
+            3: "3 · Powstanie listopadowe",
+            4: "4 · Po upadku powstania",
+            5: "5 · Lata 1846–1848",
+            6: "6 · Prawda czy fałsz?"
+        };
+
+        /*
+         * Format karty:
+         *   q       – pytanie (przód)
+         *   a       – odpowiedź jako tekst            } albo
+         *   lead + items – wstęp i lista punktów      } to
+         *   note    – dopisek pod odpowiedzią (opcjonalnie)
+         *   steps   – [{ q, a }] ćwiczenie dwuetapowe: każdy punkt jako osobna fiszka (opcjonalnie)
+         *   topic   – krótka nazwa tematu pokazywana w ćwiczeniu krok po kroku
+         */
+        const allCards = [
+            // ===== 1: Nauka i kultura =====
+            { block: 1, emoji: "🏛️", q: "Jaka instytucja działała w Warszawie i skupiała uczonych, literatów oraz osoby publiczne zainteresowane rozwojem nauki i kultury w służbie narodu?",
+              a: "Towarzystwo Przyjaciół Nauk." },
+            { block: 1, emoji: "📚", q: "Jaka instytucja działała we Lwowie i zajmowała się działalnością naukową, bibliotekarską i wydawniczą?",
+              a: "Zakład Narodowy im. Ossolińskich (Ossolineum).",
+              note: "Założył go Józef Maksymilian Ossoliński." },
+            { block: 1, emoji: "🖼️", q: "Jaka instytucja w Kórniku pod Poznaniem gromadziła dzieła sztuki i cenne zbiory biblioteczne?",
+              a: "Biblioteka Kórnicka – ośrodek polskiej kultury w Wielkim Księstwie Poznańskim.",
+              note: "Założył ją Tytus Działyński." },
+            { block: 1, emoji: "📍", q: "W którym mieście i w której części ziem polskich działały te trzy instytucje?",
+              lead: "Instytucje nauki i kultury:",
+              items: [
+                  "<strong>Towarzystwo Przyjaciół Nauk</strong> – Warszawa (Królestwo Polskie, zabór rosyjski)",
+                  "<strong>Ossolineum</strong> – Lwów (Galicja, zabór austriacki)",
+                  "<strong>Biblioteka Kórnicka</strong> – Kórnik (Wielkie Księstwo Poznańskie, zabór pruski)"
+              ],
+              topic: "Gdzie działały?",
+              steps: [
+                  { q: "Gdzie działało Towarzystwo Przyjaciół Nauk?", a: "W Warszawie – w Królestwie Polskim (zabór rosyjski)." },
+                  { q: "Gdzie działało Ossolineum?", a: "We Lwowie – w Galicji (zabór austriacki). <strong>Nie</strong> w Wielkim Księstwie Poznańskim!" },
+                  { q: "Gdzie działała Biblioteka Kórnicka?", a: "W Kórniku pod Poznaniem – w Wielkim Księstwie Poznańskim (zabór pruski)." }
+              ] },
+            { block: 1, emoji: "🔮", q: "Kto był działaczem religijnym, filozofem i twórcą idei mesjanizmu?",
+              a: "Andrzej Towiański.",
+              topic: "Mesjanizm",
+              steps: [
+                  { q: "Co to jest mesjanizm?", a: "Przekonanie, że naród polski ma szczególną misję: przez swoje cierpienie ma odkupić i wyzwolić inne narody (Polska jako „Chrystus narodów”)." }
+              ] },
+            { block: 1, emoji: "🎹", q: "Który polski kompozytor inspirował się m.in. polską muzyką ludową i od 1830 r. przebywał na emigracji?",
+              a: "Fryderyk Chopin." },
+
+            // ===== 2: Tajne organizacje =====
+            { block: 2, emoji: "🎓", q: "Która organizacja była studencka, jej celem było samokształcenie, a jednym z jej założycieli był Adam Mickiewicz?",
+              a: "Towarzystwo Filomatów (w Wilnie)." },
+            { block: 2, emoji: "🕯️", q: "Która organizacja dążyła do odbudowy państwa polskiego w granicach przedrozbiorowych, a jej założyciel po jej rozbiciu dożywotnio pozostał w więzieniu?",
+              a: "Towarzystwo Patriotyczne – założone przez majora Waleriana Łukasińskiego." },
+            { block: 2, emoji: "🎖️", q: "Która organizacja powstała w szkole wojskowej, chciała walczyć o niepodległość i opracować plan powstania, a jej członkowie rozpoczęli powstanie listopadowe?",
+              a: "Sprzysiężenie Podchorążych – założone w 1828 r. przez Piotra Wysockiego w Szkole Podchorążych Piechoty w Warszawie." },
+            { block: 2, emoji: "⛓️", q: "Kim był Walerian Łukasiński?",
+              a: "Majorem, założycielem Towarzystwa Patriotycznego. Po rozbiciu organizacji został uwięziony i spędził w więzieniu resztę życia.",
+              note: "Dlatego nie był przedstawicielem Wielkiej Emigracji – nie wyjechał z kraju." },
+
+            // ===== 3: Powstanie listopadowe =====
+            { block: 3, emoji: "🌙", q: "Kiedy wybuchło powstanie listopadowe?",
+              a: "W nocy z 29 na 30 listopada 1830 r.",
+              note: "Wybuchło w 1830 r., upadło w 1831 r." },
+            { block: 3, emoji: "🔥", q: "Jakie były przyczyny wybuchu powstania listopadowego?",
+              lead: "Przyczyny:",
+              items: [
+                  "łamanie konstytucji przez cara (m.in. cenzura, prześladowanie opozycji)",
+                  "groźba wykrycia spisku w Szkole Podchorążych",
+                  "plan wysłania wojska polskiego do tłumienia rewolucji w Belgii"
+              ],
+              topic: "Przyczyny powstania",
+              steps: [
+                  { q: "Jak car łamał konstytucję Królestwa Polskiego?", a: "M.in. wprowadził cenzurę i prześladował opozycję (np. posłów kaliszan)." },
+                  { q: "Dlaczego spiskowcy musieli się spieszyć?", a: "Władze wpadły na trop spisku w Szkole Podchorążych – groziły aresztowania." },
+                  { q: "Co miało stać się z wojskiem polskim i dlaczego to przyspieszyło powstanie?", a: "Car chciał wysłać je do tłumienia rewolucji w Belgii – Polacy nie chcieli walczyć z innym narodem walczącym o wolność." }
+              ] },
+            { block: 3, emoji: "📉", q: "Jakie były skutki powstania listopadowego?",
+              lead: "Skutki:",
+              items: [
+                  "ograniczenie autonomii Królestwa Polskiego (Statut organiczny zamiast konstytucji)",
+                  "Wielka Emigracja",
+                  "represje, m.in. budowa Cytadeli w Warszawie",
+                  "ograniczenie autonomii Wielkiego Księstwa Poznańskiego (zabór pruski)"
+              ] },
+            { block: 3, emoji: "🤴", q: "Kim był wielki książę Konstanty?",
+              a: "Bratem cara i naczelnym wodzem armii Królestwa Polskiego. W praktyce to on sprawował władzę w Królestwie, dlatego traktuje się go jak namiestnika.",
+              note: "Formalnie namiestnikiem był do 1826 r. gen. Józef Zajączek." },
+
+            // ===== 4: Po upadku powstania =====
+            { block: 4, emoji: "🧳", q: "Czym była Wielka Emigracja?",
+              a: "Wyjazdem na Zachód (przede wszystkim do Francji) około 10 tysięcy Polaków po upadku powstania listopadowego w 1831 r. – działaczy politycznych, wojskowych oraz twórców kultury." },
+            { block: 4, emoji: "🔢", q: "Ile osób według szacunków opuściło ziemie polskie w czasie Wielkiej Emigracji?",
+              a: "Około 10 tysięcy." },
+            { block: 4, emoji: "👥", q: "Kto był przedstawicielem Wielkiej Emigracji?",
+              lead: "Przedstawiciele Wielkiej Emigracji, m.in.:",
+              items: [
+                  "<strong>Adam Mickiewicz</strong>",
+                  "<strong>Juliusz Słowacki</strong>",
+                  "<strong>Joachim Lelewel</strong>",
+                  "<strong>Fryderyk Chopin</strong>"
+              ],
+              note: "Walerian Łukasiński NIE był – siedział w rosyjskim więzieniu." },
+            { block: 4, emoji: "🎩", q: "Które stronnictwo emigracyjne chciało zachowania ustroju Polski sprzed trzeciego rozbioru?",
+              a: "Hôtel Lambert – konserwatywny obóz księcia Adama Jerzego Czartoryskiego, który chciał odbudować Polskę jako monarchię konstytucyjną i liczył na pomoc dyplomacji." },
+            { block: 4, emoji: "📕", q: "Co władze carskie ustanowiły w Królestwie Polskim po upadku powstania listopadowego zamiast konstytucji?",
+              a: "Statut organiczny (1832 r.), który mocno ograniczył odrębność Królestwa Polskiego." },
+            { block: 4, emoji: "🏯", q: "Co zbudowano w Warszawie po upadku powstania listopadowego, aby zapewnić Rosjanom kontrolę nad miastem?",
+              a: "Cytadelę Warszawską." },
+            { block: 4, emoji: "🦅", q: "Jaki był skutek powstania listopadowego w zaborze pruskim?",
+              a: "Ograniczenie autonomii Wielkiego Księstwa Poznańskiego." },
+
+            // ===== 5: Lata 1846–1848 =====
+            { block: 5, emoji: "🔥", q: "Kto stał na czele powstania krakowskiego w 1846 r.?",
+              a: "Dyktatorem powstania był Jan Tyssowski; ważną rolę odegrał Edward Dembowski.",
+              note: "Nie myl z Jakubem Szelą – on prowadził chłopów w rabacji galicyjskiej." },
+            { block: 5, emoji: "📜", q: "Co ogłoszono w „Manifeście do Narodu Polskiego” w czasie powstania krakowskiego?",
+              lead: "Manifest ogłaszał m.in.:",
+              items: [
+                  "zniesienie wszelkich przywilejów stanowych",
+                  "równość wszystkich obywateli wobec prawa",
+                  "zniesienie pańszczyzny i uwłaszczenie chłopów"
+              ],
+              note: "Autorzy manifestu popierali uwłaszczenie chłopów." },
+            { block: 5, emoji: "🪓", q: "Kim był Jakub Szela?",
+              a: "Przywódcą chłopów w okolicach Tarnowa podczas rabacji galicyjskiej w 1846 r. – chłopi napadali wtedy na dwory szlacheckie i powstańców." },
+            { block: 5, emoji: "🌷", q: "Co działo się w Wielkopolsce w czasie Wiosny Ludów (1848 r.)?",
+              lead: "Wielkopolska 1848:",
+              items: [
+                  "powstanie Komitetu Narodowego w Poznaniu",
+                  "prośba o polonizację urzędów i szkół",
+                  "utworzenie obozów wojskowych",
+                  "zwycięstwa Polaków pod <strong>Miłosławiem</strong> i <strong>Sokołowem</strong>"
+              ],
+              topic: "Wielkopolska 1848",
+              steps: [
+                  { q: "Czego Komitet Narodowy w Poznaniu chciał od władz pruskich?", a: "Polonizacji urzędów i szkół, czyli przywrócenia w nich języka polskiego." },
+                  { q: "Kto dowodził powstaniem w Wielkopolsce?", a: "Ludwik Mierosławski." },
+                  { q: "Gdzie Polacy wygrali bitwy w Wielkopolsce w 1848 r.?", a: "Pod Miłosławiem i pod Sokołowem." }
+              ] },
+            { block: 5, emoji: "🏔️", q: "Co działo się w Galicji w czasie Wiosny Ludów (1848 r.)?",
+              lead: "Galicja 1848:",
+              items: [
+                  "utworzenie oddziałów Gwardii Narodowej (m.in. w Krakowie i we Lwowie)",
+                  "wydanie przez Austrię dekretu o uwłaszczeniu chłopów"
+              ],
+              topic: "Galicja 1848",
+              steps: [
+                  { q: "Kto wydał w Galicji dekret o uwłaszczeniu chłopów?", a: "Zaborca, czyli władze austriackie." },
+                  { q: "Po co Austriacy uwłaszczyli chłopów w Galicji?", a: "Żeby chłopi nie poparli polskiego ruchu narodowego." }
+              ] },
+
+            // ===== 6: Prawda czy fałsz? =====
+            { block: 6, emoji: "🦅", q: "Wielkie Księstwo Poznańskie posiadało własną konstytucję.",
+              a: "<strong>Fałsz.</strong> Miało tylko ograniczoną autonomię. Własną konstytucję miało Królestwo Polskie." },
+            { block: 6, emoji: "🦅", q: "Skutkiem powstania listopadowego w zaborze pruskim było ograniczenie autonomii Wielkiego Księstwa Poznańskiego.",
+              a: "<strong>Prawda.</strong>" },
+            { block: 6, emoji: "🖼️", q: "Biblioteka w Kórniku była ośrodkiem polskiej kultury w Wielkim Księstwie Poznańskim.",
+              a: "<strong>Prawda.</strong>" },
+            { block: 6, emoji: "📚", q: "Zakład Narodowy im. Ossolińskich stanowił ośrodek polskiej kultury w Wielkim Księstwie Poznańskim.",
+              a: "<strong>Fałsz.</strong> Ossolineum działało we Lwowie, w Galicji." },
+            { block: 6, emoji: "🤴", q: "Wielki książę Konstanty nie był namiestnikiem Królestwa Polskiego.",
+              a: "<strong>Fałsz.</strong> To Konstanty, brat cara, w praktyce rządził Królestwem Polskim." },
+            { block: 6, emoji: "📕", q: "Statut organiczny wprowadzono w Królestwie Polskim.",
+              a: "<strong>Prawda.</strong> Car wprowadził go w 1832 r. zamiast konstytucji." },
+            { block: 6, emoji: "📜", q: "Autorzy „Manifestu do Narodu Polskiego” (1846) sprzeciwiali się uwłaszczeniu chłopów.",
+              a: "<strong>Fałsz.</strong> Manifest zapowiadał uwłaszczenie chłopów." },
+            { block: 6, emoji: "📜", q: "W „Manifeście do Narodu Polskiego” (1846) ogłoszono zniesienie wszelkich przywilejów stanowych.",
+              a: "<strong>Prawda.</strong>" },
+            { block: 6, emoji: "⛓️", q: "Walerian Łukasiński był przedstawicielem Wielkiej Emigracji.",
+              a: "<strong>Fałsz.</strong> Siedział w więzieniu. Przedstawicielami Wielkiej Emigracji byli m.in. Mickiewicz, Słowacki i Lelewel." },
+            { block: 6, emoji: "🎓", q: "Adam Mickiewicz działał w Towarzystwie Filomatów.",
+              a: "<strong>Prawda.</strong> Był jednym z jego założycieli." },
+            { block: 6, emoji: "🌙", q: "Powstanie listopadowe wybuchło w 1831 r.",
+              a: "<strong>Fałsz.</strong> Wybuchło w 1830 r. (w 1831 r. upadło)." }
+        ];
+
+        // Biblioteka trzyma jedną tablicę kart; filtr działu podmienia jej zawartość w miejscu.
+        const cards = allCards.slice();
+
+        // Stan ćwiczenia dwuetapowego: poziom 1 = karta główna, poziom 2 = kroki (każdy punkt osobno)
+        let learningLevel = 1;
+        let stepIndex = 0;
+        const levelButton = document.getElementById("level-button");
+        const stepsButton = document.getElementById("steps-button");
+
+        const listHtml = (items, nested = false) =>
+            `<ul class="list-disc pl-5 ${nested ? "mt-1" : ""} space-y-1 text-left text-sm leading-snug">` +
+            items.map(item => typeof item === "string"
+                ? `<li>${item}</li>`
+                : `<li>${item.text}${item.sub ? listHtml(item.sub, true) : ""}</li>`
+            ).join("") +
+            "</ul>";
+
+        const answerHtml = card => {
+            let html = "";
+            if (card.a) html += `<p class="text-base font-semibold leading-relaxed">${card.a}</p>`;
+            if (card.lead) html += `<p class="text-sm font-semibold text-left mb-2 text-amber-200">${card.lead}</p>`;
+            if (card.items) html += listHtml(card.items);
+            if (card.note) html += `<p class="text-xs text-orange-100 italic mt-2 leading-snug">${card.note}</p>`;
+            return html;
+        };
+
+        Flashcards.create({
+            cards,
+            defaultMode: "ALL",
+            modeClasses: {
+                active: "py-2 text-xs font-bold rounded-xl transition bg-white text-orange-700 shadow-md",
+                inactive: "py-2 text-xs font-bold rounded-xl transition text-white hover:bg-white/20"
+            },
+            scoreLabel: "🌟 Gwiazdki",
+
+            render(card) {
+                const inSteps = learningLevel === 2 && card.steps;
+                levelButton.classList.toggle("hidden", !inSteps);
+                stepsButton.classList.toggle("hidden", !!inSteps || !card.steps);
+
+                if (inSteps) {
+                    const step = card.steps[stepIndex];
+                    return {
+                        emoji: card.emoji,
+                        frontLabel: `${card.topic} · krok ${stepIndex + 1} z ${card.steps.length}`,
+                        frontMain: step.q,
+                        backLabel: "Odpowiedź",
+                        backHtml: `<p class="text-base font-semibold leading-relaxed">${step.a}</p>`,
+                        counter: `Krok ${stepIndex + 1} / ${card.steps.length}`
+                    };
+                }
+                return {
+                    emoji: card.emoji,
+                    frontLabel: blocks[card.block],
+                    frontMain: card.q,
+                    backLabel: card.block === 6 ? "Prawda czy fałsz?" : "Odpowiedź",
+                    backHtml: answerHtml(card)
+                };
+            },
+
+            // W ćwiczeniu krok po kroku "dalej" / "wstecz" przechodzą po punktach, nie po kartach.
+            onNext(app) {
+                if (learningLevel !== 2) return false;
+                if (stepIndex < app.cards[app.index].steps.length - 1) {
+                    stepIndex++;
+                    return true;
+                }
+                learningLevel = 1; // koniec ćwiczenia – biblioteka przejdzie do następnej karty
+                stepIndex = 0;
+                return false;
+            },
+            onPrev() {
+                if (learningLevel !== 2) return false;
+                if (stepIndex > 0) stepIndex--;
+                else learningLevel = 1;
+                return true;
+            },
+            onModeChange(app) {
+                const filtered = app.mode === "ALL" ? allCards : allCards.filter(c => String(c.block) === app.mode);
+                cards.splice(0, cards.length, ...filtered);
+                app.index = 0;
+                learningLevel = 1;
+                stepIndex = 0;
+            },
+            onReset(app) {
+                learningLevel = 1;
+                stepIndex = 0;
+                app.setMode("ALL"); // nauka od nowa obejmuje wszystkie działy, nie tylko wybrany
+            },
+
+            actions: {
+                "start-steps"(app) {
+                    if (!app.cards[app.index].steps) return;
+                    learningLevel = 2;
+                    stepIndex = 0;
+                    app.update();
+                },
+                "return-to-card"(app) {
+                    learningLevel = 1;
+                    stepIndex = 0;
+                    app.update();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
